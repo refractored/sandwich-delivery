@@ -29,7 +29,7 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "coinflip":
 
 		if m.GuildID != supportserver {
-			return
+			supportonly(s, m, false)
 		}
 		CoinflipCommand(s, m)
 
