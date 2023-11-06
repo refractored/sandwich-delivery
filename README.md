@@ -1,6 +1,6 @@
-## Submarine Delivery
-Submarine Delivery is a small little project I am making in my freetime.
+## 🥪 Submarine Delivery 🥪
+Submarine Delivery is a small project I am doing in my free time. The purpose is to learn go hopefully
 
-The end goal is for the bot to be like the old Sandwich Delivery bot (or virtual diner bot)
+The end goal is for the bot to be like the old Sandwich Delivery bot (or Virtual Diner Bot)
 
 If you find any bugs, please [create an issue](../../issues/new)!
