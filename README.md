@@ -6,5 +6,6 @@ The end goal is for the bot to be like the old Sandwich Delivery bot (or Virtual
 If you find any bugs, please [create an issue](../../issues/new)!
 
 To run the bot, you need to have a bot token. You can get one by creating a bot on the [Discord Developer Portal](https://discord.com/developers/applications)
-After that you can run the bot by running the following command in the root directory of the project:
-`` go run ./src/main``
+After that you update the config with the correct information, then run the bot by running the following command in the root directory of the project:
+
+``go run ./src/main``
