@@ -7,8 +7,9 @@ import (
 
 // Config represents the bot configuration.
 type Config struct {
-	Token  string `json:"token"`
-	Prefix string `json:"prefix"`
+	Token        string `json:"token"`
+	Prefix       string `json:"prefix"`
+	SupportGuild string `json:"supportguild"`
 }
 
 // LoadConfig reads the configuration from a JSON file and returns a Config struct.

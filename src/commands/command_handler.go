@@ -19,16 +19,20 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	prefix := cfg.Prefix
+	supportserver := cfg.SupportGuild
+
 	if args[0] != prefix {
 		return
 	}
 
 	switch args[1] {
 	case "coinflip":
-		if m.GuildID != "1170846423479242792" {
+
+		if m.GuildID != supportserver {
 			return
 		}
 		CoinflipCommand(s, m)
+
 	case "ping":
 		PingCommand(s, m)
 	}
