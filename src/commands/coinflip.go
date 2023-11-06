@@ -10,4 +10,3 @@ func CoinflipCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	selection := rand.Intn(len(coin))
 	s.ChannelMessageSend(m.ChannelID, coin[selection])
 }
-dsadad
