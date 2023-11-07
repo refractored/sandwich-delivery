@@ -3,37 +3,28 @@ package commands
 import (
 	"github.com/bwmarrin/discordgo"
 	"go-discord-bot/src/config"
-	"log"
 	"strings"
 )
 
-func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
+//var commandRegistry = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
+//	"coinflip": CoinflipCommand,
+//	"ping":     PingCommand,
+//}
+
+func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config.Config) {
 	args := strings.Split(m.Content, " ")
 
-	configPath := "config.json"
-
-	// I actually don't know if this is a bad approach to load the config twice, but it works for now.
-	cfg, err := config.LoadConfig(configPath)
-	if err != nil {
-		log.Fatalf("Error loading configuration: %v", err)
-	}
-
 	prefix := cfg.Prefix
-	supportserver := cfg.SupportGuild
 
 	if args[0] != prefix {
 		return
 	}
 
-	switch args[1] {
-	case "coinflip":
+	// Get the command name
+	commandName := args[1]
 
-		if m.GuildID != supportserver {
-			supportonly(s, m, false)
-		}
-		CoinflipCommand(s, m)
-
-	case "ping":
-		PingCommand(s, m)
+	// Check if the command exists in the registry
+	if commandFunc, ok := commandRegistry[commandName]; ok {
+		commandFunc(s, m)
 	}
 }

@@ -29,7 +29,7 @@ func main() {
 			return
 		}
 
-		commands.HandleCommand(sess, m)
+		commands.HandleCommand(sess, m, &cfg)
 	})
 
 	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
