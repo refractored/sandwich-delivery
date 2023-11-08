@@ -12,16 +12,16 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
-
+	startTime := time.Now()
 	configPath := "config.json"
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
-
 	db, err := gorm.Open(mysql.Open(cfg.MySQLDSN), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %v", err)
@@ -43,9 +43,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer sess.Close()
 
+	startupTime := time.Since(startTime)
+	message := fmt.Sprintf("Bot started! (%[1]s)", startupTime)
+	sess.ChannelMessageSend("1171665367454716016", message)
 	fmt.Println("Bot is running!")
+
+	defer func() {
+		fmt.Println("Bot is shutting down...")
+		sess.ChannelMessageSend("1171665367454716016", "Shutting down...")
+		sess.Close()
+	}()
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)

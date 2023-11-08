@@ -33,6 +33,7 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config
 	var commandRegistry = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
 
 		// Owner Only Commands
+		"shutdown": ShutdownCommand,
 		"coinflip": CoinflipCommand,
 		"blacklist": func(s *discordgo.Session, m *discordgo.MessageCreate) {
 			BlacklistCommand(s, m, db)
