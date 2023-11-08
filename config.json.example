@@ -1,5 +1,6 @@
 {
   "token": "BOT_TOKEN",
   "prefix": "%",
-  "supportguild": "1234"
+  "supportguild": "1234",
+  "mysqldsn": "user:password@tcp(localhost:3306)/your_database_name"
 }

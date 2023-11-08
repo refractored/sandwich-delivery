@@ -5,6 +5,9 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"go-discord-bot/src/commands"
 	"go-discord-bot/src/config"
+	"go-discord-bot/src/models"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"log"
 	"os"
 	"os/signal"
@@ -19,17 +22,19 @@ func main() {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
 
+	db, err := gorm.Open(mysql.Open(cfg.MySQLDSN), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Error connecting to the database: %v", err)
+	}
+	db.AutoMigrate(&models.BlacklistUser{})
+
 	sess, err := discordgo.New("Bot " + cfg.Token)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	sess.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if m.Author.ID == s.State.User.ID {
-			return
-		}
-
-		commands.HandleCommand(sess, m, &cfg)
+		commands.HandleCommand(sess, m, &cfg, db)
 	})
 
 	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged

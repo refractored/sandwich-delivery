@@ -10,6 +10,7 @@ type Config struct {
 	Token        string `json:"token"`
 	Prefix       string `json:"prefix"`
 	SupportGuild string `json:"supportguild"`
+	MySQLDSN     string `json:"mysqldsn"`
 }
 
 // LoadConfig reads the configuration from a JSON file and returns a Config struct.
