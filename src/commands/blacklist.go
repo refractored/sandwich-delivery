@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"go-discord-bot/src/models"
 	"gorm.io/gorm"
@@ -9,10 +8,8 @@ import (
 )
 
 func BlacklistCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
-	fmt.Println("Inside BlacklistCommand")
 	args := strings.Split(m.Content, " ")
 
-	fmt.Println("Checking If Blacklisted")
 	if len(args) < 3 {
 		s.ChannelMessageSend(m.ChannelID, "Usage: % blacklist <user_id>")
 		return

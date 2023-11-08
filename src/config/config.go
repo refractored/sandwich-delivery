@@ -11,6 +11,7 @@ type Config struct {
 	Prefix       string `json:"prefix"`
 	SupportGuild string `json:"supportguild"`
 	MySQLDSN     string `json:"mysqldsn"`
+	ownerID      string `json:"ownerid"`
 }
 
 // LoadConfig reads the configuration from a JSON file and returns a Config struct.

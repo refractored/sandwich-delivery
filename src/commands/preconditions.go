@@ -1,6 +1,8 @@
 package commands
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/bwmarrin/discordgo"
+)
 
 func owneronly(s *discordgo.Session, m *discordgo.MessageCreate, silent bool) {
 	if !silent {
