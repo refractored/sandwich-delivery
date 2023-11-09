@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// TODO: USE uint64 FOR USERID IN THE FUTURE
+// TODO: USE int FOR USERID IN THE FUTURE
 type BlacklistUser struct {
 	ID        uint `gorm:"primaryKey"`
 	UserID    string

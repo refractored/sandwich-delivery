@@ -27,6 +27,7 @@ func main() {
 		log.Fatalf("Error connecting to the database: %v", err)
 	}
 	db.AutoMigrate(&models.BlacklistUser{})
+	db.AutoMigrate(&models.Order{})
 
 	sess, err := discordgo.New("Bot " + cfg.Token)
 	if err != nil {

@@ -45,6 +45,9 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config
 
 		// Everyone Commands
 		"ping": PingCommand,
+		"order": func(s *discordgo.Session, m *discordgo.MessageCreate) {
+			OrderCommand(s, m, db)
+		},
 	}
 
 	if commandFunc, ok := commandRegistry[commandName]; ok {
