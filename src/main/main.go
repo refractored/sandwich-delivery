@@ -47,6 +47,7 @@ func main() {
 
 	startupTime := time.Since(startTime)
 	startupMessage := fmt.Sprintf("Bot started! (%[1]s)", startupTime)
+	sess.UpdateGameStatus(0, "HAI GUYS :3")
 	sess.ChannelMessageSend("1171665367454716016", startupMessage)
 	fmt.Println("Bot is running!")
 
