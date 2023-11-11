@@ -10,6 +10,8 @@ type Order struct {
 	OrderDescription string
 	Username         string
 	Discriminator    string
+	ServerID         string
+	ChannelID        string
 	CreatedAt        time.Time  `gorm:"type:datetime"`
 	DeletedAt        *time.Time `gorm:"index"`
 }

@@ -12,22 +12,22 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 
 	args := strings.Split(m.Content, " ")
 	var user models.Order
-	var displayname string
-	if m.Author.Discriminator != "0" {
-		displayname = m.Author.Username + "#" + m.Author.Discriminator
-	} else {
-		displayname = m.Author.Username
+	var displayname = DisplayName(s, m)
+
+	if len(args[1]) < 3 {
+		s.ChannelMessageSend(m.ChannelID, "Usage: %order <cancel|purge|<order>>")
+		return
 	}
 
-	switch args[2] {
-
+	switch args[1] {
 	case "cancel":
+
 		err := db.Table("orders").Select("user_id").Where("user_id = ?", m.Author.ID).First(&user)
 		if err.Error != nil {
 			noPendingOrders := &discordgo.MessageEmbed{
 				Title:       "Error!",
 				Description: "You do not have a pending order!",
-				Color:       0xff2c2c, // Green color
+				Color:       0xff2c2c,
 				Footer: &discordgo.MessageEmbedFooter{
 					Text:    "Executed by " + displayname,
 					IconURL: m.Author.AvatarURL("256"),
@@ -98,7 +98,7 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 			return
 		}
 
-		foodOrder := strings.Join(args[2:], " ")
+		foodOrder := strings.Join(args[1:], " ")
 		orderConformation := &discordgo.MessageEmbed{
 			Title: "Order Placed!",
 			Description: "Thanks for placing your order!" +
@@ -125,6 +125,8 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 			OrderDescription: foodOrder,
 			Username:         m.Author.Username,
 			Discriminator:    m.Author.Discriminator,
+			ServerID:         m.GuildID,
+			ChannelID:        m.ChannelID,
 		}).Error
 
 		if err != nil {

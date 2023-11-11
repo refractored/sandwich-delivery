@@ -16,19 +16,28 @@ func IsUserBlacklisted(db *gorm.DB, userID string) bool {
 	return result.Error == nil
 }
 
+func DisplayName(s *discordgo.Session, m *discordgo.MessageCreate) string {
+	var displayname string
+	if m.Author.Discriminator != "0" {
+		displayname = m.Author.Username + "#" + m.Author.Discriminator
+	} else {
+		displayname = m.Author.Username
+	}
+	return displayname
+}
 func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config.Config, db *gorm.DB) {
 
-	args := strings.Split(m.Content, " ")
-
-	prefix := cfg.Prefix
-
-	if args[0] != prefix {
+	if !strings.HasPrefix(m.Content, cfg.Prefix) {
 		return
 	}
+	test := strings.Replace(m.Content, cfg.Prefix, "", -1)
+	args := strings.Fields(test)
+	print(args[1])
+
 	if IsUserBlacklisted(db, m.Author.ID) {
 		return
 	}
-	commandName := args[1]
+	commandName := args[0]
 
 	var commandRegistry = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
 
