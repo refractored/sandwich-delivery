@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-// TODO: USE int FOR USERID IN THE FUTURE
 type BlacklistUser struct {
 	ID        uint `gorm:"primaryKey"`
 	UserID    string
