@@ -32,7 +32,6 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config
 	}
 	test := strings.Replace(m.Content, cfg.Prefix, "", -1)
 	args := strings.Fields(test)
-	print(args[1])
 
 	if IsUserBlacklisted(db, m.Author.ID) {
 		return
