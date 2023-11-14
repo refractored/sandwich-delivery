@@ -2,9 +2,9 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"go-discord-bot/src/models"
 	"gorm.io/gorm"
 	"log"
+	"sandwich-delivery/src/models"
 	"strings"
 )
 
