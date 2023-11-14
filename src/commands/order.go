@@ -145,7 +145,7 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 				},
 			}
 			s.ChannelMessageSendEmbed(m.ChannelID, errorCreatingOrder)
-			log.Println("Error Creating Order: %v", err)
+			log.Printf("Error Creating Order: %v", err)
 			return
 		}
 
