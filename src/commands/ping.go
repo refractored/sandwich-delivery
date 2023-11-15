@@ -8,7 +8,6 @@ func PingCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	ping := s.HeartbeatLatency()
 	var displayName = DisplayName(s, m)
 
-	//s.ChannelMessageSend(m.ChannelID, "Bot Ping: "+ping.String())
 	pingEmbed := &discordgo.MessageEmbed{
 		Title:       "Pong!",
 		Description: "Bot Ping: " + ping.String(),
