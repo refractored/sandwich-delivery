@@ -8,7 +8,6 @@ import (
 
 func DelOrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
 
-	//args := strings.Split(m.Content, " ")
 	var user models.Order
 	var displayname = DisplayName(s, m)
 
