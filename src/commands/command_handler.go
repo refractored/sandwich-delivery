@@ -56,6 +56,9 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config
 		"order": func(s *discordgo.Session, m *discordgo.MessageCreate) {
 			OrderCommand(s, m, db)
 		},
+		"delorder": func(s *discordgo.Session, m *discordgo.MessageCreate) {
+			DelOrderCommand(s, m, db)
+		},
 	}
 
 	if commandFunc, ok := commandRegistry[commandName]; ok {
