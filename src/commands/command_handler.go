@@ -34,6 +34,7 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config
 	args := strings.Fields(test)
 
 	if IsUserBlacklisted(db, m.Author.ID) {
+		s.ChannelMessageSend(m.ChannelID, "You are blacklisted from using this bot!")
 		return
 	}
 	commandName := args[0]
