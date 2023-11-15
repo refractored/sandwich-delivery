@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
-	log.Println("Migrating Opening Connection...")
+	log.Println("Opening Connection...")
 	db, err := gorm.Open(mysql.Open(cfg.MySQLDSN), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %v", err)
