@@ -11,7 +11,6 @@ import (
 func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
 
 	args := strings.Split(m.Content, " ")
-	//var user models.Order
 	var displayname = DisplayName(s, m)
 
 	if len(args[1]) < 3 {
