@@ -9,7 +9,7 @@ import (
 func DelOrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
 
 	var user models.Order
-	var displayname = DisplayName(s, m)
+	var displayName = DisplayName(s, m)
 
 	err := db.Table("orders").Select("user_id").Where("user_id = ?", m.Author.ID).First(&user)
 	if err.Error != nil {
@@ -18,7 +18,7 @@ func DelOrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.
 			Description: "You do not have a pending order!",
 			Color:       0xff2c2c,
 			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Executed by " + displayname,
+				Text:    "Executed by " + displayName,
 				IconURL: m.Author.AvatarURL("256"),
 			},
 			Author: &discordgo.MessageEmbedAuthor{
@@ -36,7 +36,7 @@ func DelOrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.
 			Description: "There was a problem deleting your order! Please try again.\n" +
 				"If this issue persists, Please report it!", Color: 0xff2c2c, // Green color
 			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Executed by " + displayname,
+				Text:    "Executed by " + displayName,
 				IconURL: m.Author.AvatarURL("256"),
 			},
 			Author: &discordgo.MessageEmbedAuthor{
@@ -52,7 +52,7 @@ func DelOrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.
 		Description: "You now can create a new order!",
 		Color:       0x00ff00, // Green color
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    "Executed by " + displayname,
+			Text:    "Executed by " + displayName,
 			IconURL: m.Author.AvatarURL("256"),
 		},
 		Author: &discordgo.MessageEmbedAuthor{
