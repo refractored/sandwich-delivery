@@ -13,7 +13,7 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 	var user models.Order
 	args := strings.Split(m.Content, " ")
 	foodOrder := strings.Join(args[1:], " ")
-	displayname := DisplayName(s, m)
+	displayName := DisplayName(s, m)
 
 	if len(args[1]) < 3 {
 		minCharacters := &discordgo.MessageEmbed{
@@ -21,7 +21,7 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 			Description: "Your order needs to be 3 characters or more!",
 			Color:       0xff2c2c, // Green color
 			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Executed by " + displayname,
+				Text:    "Executed by " + displayName,
 				IconURL: m.Author.AvatarURL("256"),
 			},
 			Author: &discordgo.MessageEmbedAuthor{
@@ -40,7 +40,7 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 			Description: "You already have a pending order!",
 			Color:       0xff2c2c, // Green color
 			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Executed by " + displayname,
+				Text:    "Executed by " + displayName,
 				IconURL: m.Author.AvatarURL("256"),
 			},
 			Author: &discordgo.MessageEmbedAuthor{
@@ -58,7 +58,7 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 			"\nPlease give our staff some time!",
 		Color: 0x00ff00, // Green color
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    "Executed by " + displayname,
+			Text:    "Executed by " + displayName,
 			IconURL: m.Author.AvatarURL("256"),
 		},
 		Author: &discordgo.MessageEmbedAuthor{
@@ -88,7 +88,7 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 				"If this issue persists, Please report it!",
 			Color: 0xff2c2c, // Green color
 			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Executed by " + displayname,
+				Text:    "Executed by " + displayName,
 				IconURL: m.Author.AvatarURL("256"),
 			},
 			Author: &discordgo.MessageEmbedAuthor{
