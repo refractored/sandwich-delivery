@@ -9,13 +9,27 @@ import (
 )
 
 func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
-	var user models.Order
 
+	var user models.Order
 	args := strings.Split(m.Content, " ")
-	var displayname = DisplayName(s, m)
+	foodOrder := strings.Join(args[1:], " ")
+	displayname := DisplayName(s, m)
 
 	if len(args[1]) < 3 {
-		s.ChannelMessageSend(m.ChannelID, "Usage: %order <cancel|purge|<order>>")
+		minCharacters := &discordgo.MessageEmbed{
+			Title:       "Error!",
+			Description: "Your order needs to be 3 characters or more!",
+			Color:       0xff2c2c, // Green color
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    "Executed by " + displayname,
+				IconURL: m.Author.AvatarURL("256"),
+			},
+			Author: &discordgo.MessageEmbedAuthor{
+				Name:    "Sandwich Delivery",
+				IconURL: s.State.User.AvatarURL("256"),
+			},
+		}
+		s.ChannelMessageSendEmbed(m.ChannelID, minCharacters)
 		return
 	}
 
@@ -38,7 +52,6 @@ func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB)
 		return
 	}
 
-	foodOrder := strings.Join(args[1:], " ")
 	orderConformation := &discordgo.MessageEmbed{
 		Title: "Order Placed!",
 		Description: "Thanks for placing your order!" +
