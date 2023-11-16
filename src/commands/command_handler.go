@@ -1,67 +1,30 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
-	"sandwich-delivery/src/config"
-	"sandwich-delivery/src/models"
-	"strings"
+	"os"
 )
 
-func IsUserBlacklisted(db *gorm.DB, userID string) bool {
-	var user models.BlacklistUser
-
-	result := db.Select("user_id").Where("user_id = ?", userID).First(&user)
-
-	return result.Error == nil
+var commands = map[string]Command{
+	CoinflipCommand{}.getName(): CoinflipCommand{},
 }
 
-func DisplayName(s *discordgo.Session, m *discordgo.MessageCreate) string {
-	var displayname string
-	if m.Author.Discriminator != "0" {
-		displayname = m.Author.Username + "#" + m.Author.Discriminator
-	} else {
-		displayname = m.Author.Username
+func RegisterCommands(session *discordgo.Session) {
+	for n, d := range commands {
+		_, err := session.ApplicationCommandCreate(session.State.User.ID, "", d.getCommandData())
+		if err == nil {
+			fmt.Printf("Unable to register command %s\n" + n)
+			os.Exit(1)
+		}
 	}
-	return displayname
 }
-func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config.Config, db *gorm.DB) {
 
-	if !strings.HasPrefix(m.Content, cfg.Prefix) {
-		return
+func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	command := commands[event.ApplicationCommandData().Name]
+	if command == nil {
+		session.ChannelMessageSendReply(event.ChannelID, "The command "+event.ApplicationCommandData().Name+" does not exist.", event.Message.MessageReference)
+		session.ApplicationCommandDelete(session.State.User.ID, "", event.ApplicationCommandData().ID)
 	}
-	test := strings.Replace(m.Content, cfg.Prefix, "", -1)
-	args := strings.Fields(test)
-
-	if IsUserBlacklisted(db, m.Author.ID) {
-		return
-	}
-	commandName := args[0]
-
-	var commandRegistry = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
-
-		// Owner Only Commands
-		"shutdown": ShutdownCommand,
-		"coinflip": CoinflipCommand,
-		"blacklist": func(s *discordgo.Session, m *discordgo.MessageCreate) {
-			BlacklistCommand(s, m, db)
-		},
-		"unblacklist": func(s *discordgo.Session, m *discordgo.MessageCreate) {
-			UnblacklistCommand(s, m, db)
-		},
-		// Support Server Only Commands
-
-		// Everyone Commands
-		"ping": PingCommand,
-		"order": func(s *discordgo.Session, m *discordgo.MessageCreate) {
-			OrderCommand(s, m, db)
-		},
-		"delorder": func(s *discordgo.Session, m *discordgo.MessageCreate) {
-			DelOrderCommand(s, m, db)
-		},
-	}
-
-	if commandFunc, ok := commandRegistry[commandName]; ok {
-		commandFunc(s, m)
-	}
+	command.execute(session, event)
 }

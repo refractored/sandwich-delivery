@@ -50,8 +50,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	sess.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		commands.HandleCommand(sess, m, &cfg, db)
+	sess.AddHandler(func(session *discordgo.Session, event *discordgo.InteractionCreate) {
+		commands.HandleCommand(session, event)
 	})
 	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 

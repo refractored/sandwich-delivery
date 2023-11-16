@@ -5,8 +5,18 @@ import (
 	"math/rand"
 )
 
-func CoinflipCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	var displayname = DisplayName(s, m)
+type CoinflipCommand struct{}
+
+func (c CoinflipCommand) getName() string {
+	return "coinflip"
+}
+
+func (c CoinflipCommand) getCommandData() *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "idk"}
+}
+
+func (c CoinflipCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	displayName := DisplayName(session, event)
 
 	coin := []string{"Heads", "Tails"}
 	selection := rand.Intn(len(coin))
@@ -16,15 +26,14 @@ func CoinflipCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		Description: coin[selection],
 		Color:       0x00ff00, // Green color
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    "Executed by " + displayname,
-			IconURL: m.Author.AvatarURL("256"),
+			Text:    "Executed by " + displayName,
+			IconURL: event.User.AvatarURL("256"),
 		},
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Sandwich Delivery",
-			IconURL: s.State.User.AvatarURL("256"),
+			IconURL: session.State.User.AvatarURL("256"),
 		},
 	}
 
-	s.ChannelMessageSendEmbed(m.ChannelID, pingEmbed)
-
+	session.ChannelMessageSendEmbed(event.ChannelID, pingEmbed)
 }
