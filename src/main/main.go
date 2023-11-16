@@ -31,16 +31,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %v", err)
 	}
-	log.Println("Migrating Blacklist Database...")
-	migrateBlacklistErr := db.AutoMigrate(&models.BlacklistUser{})
+	log.Println("Migrating Users Database...")
+	migrateBlacklistErr := db.AutoMigrate(&models.User{})
 	if migrateBlacklistErr != nil {
-		log.Fatal("Error migrating database:", err)
+		log.Fatal("Error migrating Users database:", err)
 		return
 	}
 	log.Println("Migrating Orders Database...")
 	migrateOrderErr := db.AutoMigrate(&models.Order{})
 	if migrateOrderErr != nil {
-		log.Fatal("Error migrating database:", err)
+		log.Fatal("Error migrating Orders database:", err)
 		return
 	}
 
