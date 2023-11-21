@@ -57,13 +57,21 @@ func IsUserBlacklisted(userID string) bool {
 		return false
 	}
 
-	var user models.BlacklistUser
+	var user models.User
 
 	db := database.GetDB()
 
-	result := db.First(&user, "user_id = ?", userID)
+	resp := db.First(&user, "user_id = ?", userID)
 
-	return result.RowsAffected > 0
+	if resp.RowsAffected == 0 {
+		return false
+	}
+
+	if resp.Error != nil {
+		return true
+	}
+
+	return user.IsBlacklisted
 }
 
 func IsOwner(userID string) bool {

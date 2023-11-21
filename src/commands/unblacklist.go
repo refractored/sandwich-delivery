@@ -57,7 +57,7 @@ func (c UnblacklistCommand) execute(session *discordgo.Session, event *discordgo
 		return
 	}
 
-	resp := database.GetDB().Delete(&models.BlacklistUser{}, "user_id = ?", user.ID)
+	resp := database.GetDB().Delete(&models.User{}, "user_id = ?", user.ID)
 
 	if resp.Error != nil {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{

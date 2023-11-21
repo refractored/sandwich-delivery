@@ -27,8 +27,8 @@ func Init(config *config.Config) *gorm.DB {
 }
 
 func migrateTables() {
-	log.Println("Migrating Blacklist Database...")
-	err := GetDB().AutoMigrate(&models.BlacklistUser{})
+	log.Println("Migrating Users Database...")
+	err := GetDB().AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatal("Error migrating database:", err)
 		return
