@@ -15,6 +15,13 @@ func IsUserBlacklisted(db *gorm.DB, userID string) bool {
 
 	return result.Error == nil
 }
+func CheckUserAccount(db *gorm.DB, userID string){
+	var user models.User
+
+	result := db.Select("user_id").Where("user_id = ?", userID).First(&user)
+	if result.Error
+	return
+}
 
 func DisplayName(s *discordgo.Session, m *discordgo.MessageCreate) string {
 	var displayname string
