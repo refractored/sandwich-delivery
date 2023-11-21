@@ -2,103 +2,141 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
 	"log"
+	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
-	"strings"
 )
 
-func OrderCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
+type OrderCommand struct{}
+
+func (c OrderCommand) getName() string {
+	return "order"
+}
+
+func (c OrderCommand) getCommandData() *discordgo.ApplicationCommand {
+	DMPermission := new(bool)
+	*DMPermission = false
+	return &discordgo.ApplicationCommand{
+		Name:        c.getName(),
+		Description: "Order something!",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "order",
+				Description: "What do you want to order?",
+				Required:    true,
+			},
+		},
+		DMPermission: DMPermission,
+	}
+}
+
+func (c OrderCommand) registerGuild() string {
+	return ""
+}
+
+func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	if InteractionIsDM(event) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "This command can only be used in servers!",
+			},
+		})
+	}
+
+	order := event.ApplicationCommandData().Options[0].StringValue()
 
 	var user models.Order
-	args := strings.Split(m.Content, " ")
-	foodOrder := strings.Join(args[1:], " ")
-	displayName := DisplayName(s, m)
 
-	if len(args[1]) < 3 {
-		minCharacters := &discordgo.MessageEmbed{
-			Title:       "Error!",
-			Description: "Your order needs to be 3 characters or more!",
-			Color:       0xff2c2c, // Green color
-			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Executed by " + displayName,
-				IconURL: m.Author.AvatarURL("256"),
+	resp := database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
+	if resp.RowsAffected > 0 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					// todo https://github.com/refractored/sandwich-delivery/issues/5
+					{
+						Title:       "Error!",
+						Description: "You already have a pending order!",
+						Color:       0xff2c2c, // Green color
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Executed by " + DisplayName(event),
+							IconURL: GetUser(event).AvatarURL("256"),
+						},
+						Author: &discordgo.MessageEmbedAuthor{
+							Name:    "Sandwich Delivery",
+							IconURL: session.State.User.AvatarURL("256"),
+						},
+					},
+				},
 			},
-			Author: &discordgo.MessageEmbedAuthor{
-				Name:    "Sandwich Delivery",
-				IconURL: s.State.User.AvatarURL("256"),
-			},
-		}
-		s.ChannelMessageSendEmbed(m.ChannelID, minCharacters)
+		})
 		return
 	}
 
-	result := db.Table("orders").Select("user_id").Where("user_id = ?", m.Author.ID).First(&user)
-	if result.Error == nil {
-		pendingOrder := &discordgo.MessageEmbed{
-			Title:       "Error!",
-			Description: "You already have a pending order!",
-			Color:       0xff2c2c, // Green color
-			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Executed by " + displayName,
-				IconURL: m.Author.AvatarURL("256"),
+	resp = database.GetDB().Create(&models.Order{
+		UserID:           GetUser(event).ID,
+		OrderDescription: order,
+		Username:         GetUser(event).Username,
+		Discriminator:    GetUser(event).Discriminator,
+		ServerID:         event.GuildID,
+		ChannelID:        event.ChannelID,
+	})
+	if resp.Error != nil {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					// todo https://github.com/refractored/sandwich-delivery/issues/5
+					{
+						Title: "Error!",
+						Description: "There was a problem creating your order! Please try again.\n" +
+							"If this issue persists, Please report it!",
+						Color: 0xff2c2c, // Green color
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Executed by " + DisplayName(event),
+							IconURL: GetUser(event).AvatarURL("256"),
+						},
+						Author: &discordgo.MessageEmbedAuthor{
+							Name:    "Sandwich Delivery",
+							IconURL: session.State.User.AvatarURL("256"),
+						},
+					},
+				},
 			},
-			Author: &discordgo.MessageEmbedAuthor{
-				Name:    "Sandwich Delivery",
-				IconURL: s.State.User.AvatarURL("256"),
-			},
-		}
-		s.ChannelMessageSendEmbed(m.ChannelID, pendingOrder)
+		})
+		log.Printf("Error Creating Order: %v", resp.Error)
 		return
 	}
 
-	orderConformation := &discordgo.MessageEmbed{
-		Title: "Order Placed!",
-		Description: "Thanks for placing your order!" +
-			"\nPlease give our staff some time!",
-		Color: 0x00ff00, // Green color
-		Footer: &discordgo.MessageEmbedFooter{
-			Text:    "Executed by " + displayName,
-			IconURL: m.Author.AvatarURL("256"),
-		},
-		Author: &discordgo.MessageEmbedAuthor{
-			Name:    "Sandwich Delivery",
-			IconURL: s.State.User.AvatarURL("256"),
-		},
-		Fields: []*discordgo.MessageEmbedField{
-			&discordgo.MessageEmbedField{
-				Name:   "Your Order:",
-				Value:  foodOrder,
-				Inline: false,
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title: "Order Placed!",
+					Description: "Thanks for placing your order!" +
+						"\nPlease give our staff some time!",
+					Color: 0x00ff00, // Green color
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Executed by " + DisplayName(event),
+						IconURL: GetUser(event).AvatarURL("256"),
+					},
+					Author: &discordgo.MessageEmbedAuthor{
+						Name:    "Sandwich Delivery",
+						IconURL: session.State.User.AvatarURL("256"),
+					},
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:   "Your Order:",
+							Value:  order,
+							Inline: false,
+						},
+					},
+				},
 			},
 		},
-	}
-	err := db.Table("orders").Create(&models.Order{
-		UserID:           m.Author.ID,
-		OrderDescription: foodOrder,
-		Username:         m.Author.Username,
-		Discriminator:    m.Author.Discriminator,
-		ServerID:         m.GuildID,
-		ChannelID:        m.ChannelID,
-	}).Error
-	if err != nil {
-		errorCreatingOrder := &discordgo.MessageEmbed{
-			Title: "Error!",
-			Description: "There was a problem creating your order! Please try again.\n" +
-				"If this issue persists, Please report it!",
-			Color: 0xff2c2c, // Green color
-			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Executed by " + displayName,
-				IconURL: m.Author.AvatarURL("256"),
-			},
-			Author: &discordgo.MessageEmbedAuthor{
-				Name:    "Sandwich Delivery",
-				IconURL: s.State.User.AvatarURL("256"),
-			},
-		}
-		s.ChannelMessageSendEmbed(m.ChannelID, errorCreatingOrder)
-		log.Printf("Error Creating Order: %v", err)
-		return
-	}
-	s.ChannelMessageSendEmbed(m.ChannelID, orderConformation)
+	})
 }

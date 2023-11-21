@@ -2,32 +2,38 @@ package config
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 )
 
 // Config represents the bot configuration.
 type Config struct {
-	Token        string `json:"token"`
-	Prefix       string `json:"prefix"`
-	SupportGuild string `json:"supportguild"`
-	MySQLDSN     string `json:"mysqldsn"`
-	ownerID      string `json:"ownerid"`
+	Token    string   `json:"token"`
+	MySQLDSN string   `json:"mysqldsn"`
+	Owners   []string `json:"owners"`
+	GuildID  string   `json:"guildid"`
 }
 
-// LoadConfig reads the configuration from a JSON file and returns a Config struct.
-func LoadConfig(filePath string) (Config, error) {
-	var config Config
+var config *Config
 
+// LoadConfig reads the configuration from a JSON file and returns a Config struct.
+func LoadConfig(filePath string) (*Config, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return config, err
+		log.Fatal(err)
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&config); err != nil {
-		return config, err
+	err = decoder.Decode(&config)
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	return config, nil
+}
+
+func GetConfig() *Config {
+	return config
 }

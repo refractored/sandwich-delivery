@@ -2,74 +2,86 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
-	"sandwich-delivery/src/config"
-	"sandwich-delivery/src/models"
-	"strings"
+	"log"
 )
 
-func IsUserBlacklisted(db *gorm.DB, userID string) bool {
-	var user models.BlacklistUser
-
-	result := db.Select("user_id").Where("user_id = ?", userID).First(&user)
-
-	return result.Error == nil
-}
-func CheckUserAccount(db *gorm.DB, userID string){
-	var user models.User
-
-	result := db.Select("user_id").Where("user_id = ?", userID).First(&user)
-	if result.Error
-	return
+var commands = map[string]Command{
+	CoinflipCommand{}.getName():    CoinflipCommand{},
+	OrderCommand{}.getName():       OrderCommand{},
+	DelOrderCommand{}.getName():    DelOrderCommand{},
+	PingCommand{}.getName():        PingCommand{},
+	ShutdownCommand{}.getName():    ShutdownCommand{},
+	BlacklistCommand{}.getName():   BlacklistCommand{},
+	UnblacklistCommand{}.getName(): UnblacklistCommand{},
 }
 
-func DisplayName(s *discordgo.Session, m *discordgo.MessageCreate) string {
-	var displayname string
-	if m.Author.Discriminator != "0" {
-		displayname = m.Author.Username + "#" + m.Author.Discriminator
-	} else {
-		displayname = m.Author.Username
+func RegisterCommands(session *discordgo.Session) {
+	for n, d := range commands {
+		_, err := session.ApplicationCommandCreate(session.State.User.ID, d.registerGuild(), d.getCommandData())
+		if err != nil {
+			log.Fatalf("Unable to register command %s: %v\n", n, err)
+		}
+
+		log.Printf("Registered command %s\n", n)
 	}
-	return displayname
 }
-func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config.Config, db *gorm.DB) {
 
-	if !strings.HasPrefix(m.Content, cfg.Prefix) {
+func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	if event.Type != discordgo.InteractionApplicationCommand {
 		return
 	}
-	test := strings.Replace(m.Content, cfg.Prefix, "", -1)
-	args := strings.Fields(test)
 
-	if IsUserBlacklisted(db, m.Author.ID) {
-		s.ChannelMessageSend(m.ChannelID, "You are blacklisted from using this bot!")
+	if IsUserBlacklisted(GetUser(event).ID) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "You are blacklisted from using this bot.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
 		return
 	}
-	commandName := args[0]
 
-	var commandRegistry = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
-
-		// Owner Only Commands
-		"shutdown": ShutdownCommand,
-		"coinflip": CoinflipCommand,
-		"blacklist": func(s *discordgo.Session, m *discordgo.MessageCreate) {
-			BlacklistCommand(s, m, db)
-		},
-		"unblacklist": func(s *discordgo.Session, m *discordgo.MessageCreate) {
-			UnblacklistCommand(s, m, db)
-		},
-		// Support Server Only Commands
-
-		// Everyone Commands
-		"ping": PingCommand,
-		"order": func(s *discordgo.Session, m *discordgo.MessageCreate) {
-			OrderCommand(s, m, db)
-		},
-		"delorder": func(s *discordgo.Session, m *discordgo.MessageCreate) {
-			DelOrderCommand(s, m, db)
-		},
+	command := commands[event.ApplicationCommandData().Name]
+	if command != nil {
+		command.execute(session, event)
+		return
 	}
 
-	if commandFunc, ok := commandRegistry[commandName]; ok {
-		commandFunc(s, m)
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			// todo https://github.com/refractored/sandwich-delivery/issues/5
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "Error",
+					Description: "Unable to find the slash command: " + event.ApplicationCommandData().Name,
+					Color:       0xff0000,
+					Author: &discordgo.MessageEmbedAuthor{
+						Name:    "Sandwich Delivery",
+						IconURL: session.State.User.AvatarURL("256"),
+					},
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Executed by " + DisplayName(event),
+						IconURL: GetUser(event).AvatarURL("256"),
+					},
+				},
+			},
+		},
+	})
+
+	err := session.ApplicationCommandDelete(session.State.User.ID, "", event.ApplicationCommandData().ID)
+	if err != nil {
+		log.Printf("Unable to delete global command %s: %v\n", event.ApplicationCommandData().Name, err)
+		return
 	}
+
+	err = session.ApplicationCommandDelete(session.State.User.ID, event.GuildID, event.ApplicationCommandData().ID)
+	if err != nil {
+		log.Printf("Unable to delete guild-specific command %s: %v\n", event.ApplicationCommandData().Name, err)
+		return
+	}
+
+	log.Printf("Deleted command %s\n", event.ApplicationCommandData().Name)
 }

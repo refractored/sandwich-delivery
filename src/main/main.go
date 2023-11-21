@@ -3,46 +3,27 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
 	"os"
 	"os/signal"
 	"sandwich-delivery/src/commands"
 	"sandwich-delivery/src/config"
-	"sandwich-delivery/src/models"
+	"sandwich-delivery/src/database"
 	"strconv"
 	"syscall"
 	"time"
 )
 
 func main() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	startTime := time.Now()
 	configPath := "config.json"
+
 	log.Println("Loading Config...")
 	cfg, err := config.LoadConfig(configPath)
-	if err != nil {
-		log.Fatalf("Error loading configuration: %v", err)
-	}
-	log.Println("Opening Connection...")
-	db, err := gorm.Open(mysql.Open(cfg.MySQLDSN), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Error connecting to the database: %v", err)
-	}
-	log.Println("Migrating Users Database...")
-	migrateBlacklistErr := db.AutoMigrate(&models.User{})
-	if migrateBlacklistErr != nil {
-		log.Fatal("Error migrating Users database:", err)
-		return
-	}
-	log.Println("Migrating Orders Database...")
-	migrateOrderErr := db.AutoMigrate(&models.Order{})
-	if migrateOrderErr != nil {
-		log.Fatal("Error migrating Orders database:", err)
-		return
-	}
+
+	log.Println("Initializing Database...")
+	database.Init(cfg)
 
 	log.Println("Opening Session on Discord...")
 	sess, err := discordgo.New("Bot " + cfg.Token)
@@ -50,9 +31,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	sess.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		commands.HandleCommand(sess, m, &cfg, db)
-	})
 	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 
 	err = sess.Open()
@@ -60,13 +38,20 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println("Registering Commands...")
+	commands.RegisterCommands(sess)
+
+	sess.AddHandler(func(session *discordgo.Session, event *discordgo.InteractionCreate) {
+		commands.HandleCommand(session, event)
+	})
+
 	startupTime := time.Since(startTime)
 	startupMessage := fmt.Sprintf("Bot started! (%[1]s)", startupTime)
 	sess.UpdateGameStatus(0, "Bot started!")
 	sess.ChannelMessageSend("1171665367454716016", startupMessage)
 
 	go func() {
-		updateStatusPeriodically(sess, db)
+		updateStatusPeriodically(sess, database.GetDB())
 	}()
 
 	log.Println("Bot is running!")
