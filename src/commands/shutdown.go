@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"sandwich-delivery/src/config"
+	"sandwich-delivery/src/models"
 )
 
 type ShutdownCommand struct{}
@@ -21,6 +22,10 @@ func (c ShutdownCommand) registerGuild() string {
 	return config.GetConfig().GuildID
 }
 
+func (c ShutdownCommand) permissionLevel() models.UserPermissionLevel {
+	return models.PermissionLevelOwner
+}
+
 func (c ShutdownCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var shutdownMessages = []string{
 		"Was it something I did? :( *(Shutting Down)*",
@@ -32,22 +37,13 @@ func (c ShutdownCommand) execute(session *discordgo.Session, event *discordgo.In
 
 	selection := rand.Intn(len(shutdownMessages))
 
-	if !IsOwner(GetUser(event).ID) {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				// todo https://github.com/refractored/sandwich-delivery/issues/5
-				Content: "You are not the bot owner!",
-			},
-		})
-		return
-	}
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: shutdownMessages[selection],
 		},
 	})
+
 	session.Close()
 	os.Exit(0)
 }

@@ -2,7 +2,6 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"log"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
 )
@@ -33,6 +32,10 @@ func (c OrderCommand) getCommandData() *discordgo.ApplicationCommand {
 
 func (c OrderCommand) registerGuild() string {
 	return ""
+}
+
+func (c OrderCommand) permissionLevel() models.UserPermissionLevel {
+	return models.PermissionLevelUser
 }
 
 func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
@@ -84,32 +87,6 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 		ServerID:         event.GuildID,
 		ChannelID:        event.ChannelID,
 	})
-	if resp.Error != nil {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					// todo https://github.com/refractored/sandwich-delivery/issues/5
-					{
-						Title: "Error!",
-						Description: "There was a problem creating your order! Please try again.\n" +
-							"If this issue persists, Please report it!",
-						Color: 0xff2c2c, // Green color
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Executed by " + DisplayName(event),
-							IconURL: GetUser(event).AvatarURL("256"),
-						},
-						Author: &discordgo.MessageEmbedAuthor{
-							Name:    "Sandwich Delivery",
-							IconURL: session.State.User.AvatarURL("256"),
-						},
-					},
-				},
-			},
-		})
-		log.Printf("Error Creating Order: %v", resp.Error)
-		return
-	}
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
