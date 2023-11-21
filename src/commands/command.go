@@ -9,31 +9,26 @@ import (
 )
 
 type Command interface {
-	/**
-	 * Returns the name of the command.
-	 */
+	// Returns the name of the command.
 	getName() string
 
-	/**
-	 * Returns the command data for this command.
-	 */
+	// Returns the command data
 	getCommandData() *discordgo.ApplicationCommand
 
-	/**
-	 * Returns the guild ID that this command should be registered to, or an empty string if it should be registered globally.
-	 */
+	// Returns the guild ID to register the command in, empty string if the command is global.
 	registerGuild() string
 
-	/**
-	 * Executes the command.
-	 */
+	// Returns the required permission level to execute the command.
+	permissionLevel() models.UserPermissionLevel
+
+	// Executes the command
 	execute(session *discordgo.Session, event *discordgo.InteractionCreate)
 }
 
 func DisplayName(event *discordgo.InteractionCreate) string {
 	user := GetUser(event)
 
-	if user.Discriminator != "0" {
+	if user.Discriminator == "0" {
 		return user.Username
 	} else {
 		return user.Username + "#" + user.Discriminator
@@ -53,8 +48,29 @@ func InteractionIsDM(event *discordgo.InteractionCreate) bool {
 }
 
 func IsUserBlacklisted(userID string) bool {
-	if IsOwner(userID) {
+	if GetPermissionLevel(userID) == models.PermissionLevelOwner {
 		return false
+	}
+
+	var user models.User
+
+	resp := database.GetDB().First(&user, "user_id = ?", userID)
+
+	if resp.RowsAffected == 0 {
+		return false
+	}
+
+	return user.IsBlacklisted
+}
+
+// Returns true if the user is the owner of the bot (defined in the config).
+func IsHardcodedOwner(userID string) bool {
+	return slices.Contains(config.GetConfig().Owners, userID)
+}
+
+func GetPermissionLevel(userID string) models.UserPermissionLevel {
+	if IsHardcodedOwner(userID) {
+		return models.PermissionLevelOwner
 	}
 
 	var user models.User
@@ -64,16 +80,8 @@ func IsUserBlacklisted(userID string) bool {
 	resp := db.First(&user, "user_id = ?", userID)
 
 	if resp.RowsAffected == 0 {
-		return false
+		return models.PermissionLevelUser
 	}
 
-	if resp.Error != nil {
-		return true
-	}
-
-	return user.IsBlacklisted
-}
-
-func IsOwner(userID string) bool {
-	return slices.Contains(config.GetConfig().Owners, userID)
+	return user.PermissionLevel
 }

@@ -22,6 +22,10 @@ func (c DelOrderCommand) registerGuild() string {
 	return ""
 }
 
+func (c DelOrderCommand) permissionLevel() models.UserPermissionLevel {
+	return models.PermissionLevelUser
+}
+
 func (c DelOrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	if InteractionIsDM(event) {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
@@ -62,30 +66,6 @@ func (c DelOrderCommand) execute(session *discordgo.Session, event *discordgo.In
 		return
 	}
 	resp = database.GetDB().Delete(order)
-	if resp.Error != nil {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					// todo https://github.com/refractored/sandwich-delivery/issues/5
-					{
-						Title: "Error!",
-						Description: "There was a problem deleting your order! Please try again.\n" +
-							"If this issue persists, Please report it!", Color: 0xff2c2c, // Green color
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Executed by " + DisplayName(event),
-							IconURL: GetUser(event).AvatarURL("256"),
-						},
-						Author: &discordgo.MessageEmbedAuthor{
-							Name:    "Sandwich Delivery",
-							IconURL: session.State.User.AvatarURL("256"),
-						},
-					},
-				},
-			},
-		})
-		return
-	}
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

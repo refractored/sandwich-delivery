@@ -32,21 +32,17 @@ func (c UnblacklistCommand) registerGuild() string {
 	return config.GetConfig().GuildID
 }
 
+func (c UnblacklistCommand) permissionLevel() models.UserPermissionLevel {
+	return models.PermissionLevelAdmin
+}
+
 func (c UnblacklistCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-	if !IsOwner(GetUser(event).ID) {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				// todo https://github.com/refractored/sandwich-delivery/issues/5
-				Content: "You are not the bot owner!",
-			},
-		})
-		return
-	}
+	userOption := event.ApplicationCommandData().Options[0].UserValue(session)
 
-	user := event.ApplicationCommandData().Options[0].UserValue(session)
+	var user models.User
 
-	if !IsUserBlacklisted(user.ID) {
+	resp := database.GetDB().First(&user, "user_id = ?", userOption.ID)
+	if resp.RowsAffected == 0 || user.IsBlacklisted == false {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -57,18 +53,7 @@ func (c UnblacklistCommand) execute(session *discordgo.Session, event *discordgo
 		return
 	}
 
-	resp := database.GetDB().Delete(&models.User{}, "user_id = ?", user.ID)
-
-	if resp.Error != nil {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				// todo https://github.com/refractored/sandwich-delivery/issues/5
-				Content: "Error unblacklisting the user.",
-			},
-		})
-		return
-	}
+	database.GetDB().Delete(&user, "user_id = ?", user.ID)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

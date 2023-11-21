@@ -6,13 +6,14 @@ import (
 )
 
 var commands = map[string]Command{
-	CoinflipCommand{}.getName():    CoinflipCommand{},
-	OrderCommand{}.getName():       OrderCommand{},
-	DelOrderCommand{}.getName():    DelOrderCommand{},
-	PingCommand{}.getName():        PingCommand{},
-	ShutdownCommand{}.getName():    ShutdownCommand{},
-	BlacklistCommand{}.getName():   BlacklistCommand{},
-	UnblacklistCommand{}.getName(): UnblacklistCommand{},
+	CoinflipCommand{}.getName():           CoinflipCommand{},
+	OrderCommand{}.getName():              OrderCommand{},
+	DelOrderCommand{}.getName():           DelOrderCommand{},
+	PingCommand{}.getName():               PingCommand{},
+	ShutdownCommand{}.getName():           ShutdownCommand{},
+	BlacklistCommand{}.getName():          BlacklistCommand{},
+	UnblacklistCommand{}.getName():        UnblacklistCommand{},
+	SetPermissionLevelCommand{}.getName(): SetPermissionLevelCommand{},
 }
 
 func RegisterCommands(session *discordgo.Session) {
@@ -44,44 +45,55 @@ func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreat
 	}
 
 	command := commands[event.ApplicationCommandData().Name]
-	if command != nil {
-		command.execute(session, event)
-		return
-	}
-
-	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			// todo https://github.com/refractored/sandwich-delivery/issues/5
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "Error",
-					Description: "Unable to find the slash command: " + event.ApplicationCommandData().Name,
-					Color:       0xff0000,
-					Author: &discordgo.MessageEmbedAuthor{
-						Name:    "Sandwich Delivery",
-						IconURL: session.State.User.AvatarURL("256"),
-					},
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Executed by " + DisplayName(event),
-						IconURL: GetUser(event).AvatarURL("256"),
+	if command == nil {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "Error",
+						Description: "Unable to find the slash command: " + event.ApplicationCommandData().Name,
+						Color:       0xff0000,
+						Author: &discordgo.MessageEmbedAuthor{
+							Name:    "Sandwich Delivery",
+							IconURL: session.State.User.AvatarURL("256"),
+						},
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Executed by " + DisplayName(event),
+							IconURL: GetUser(event).AvatarURL("256"),
+						},
 					},
 				},
+				Flags: discordgo.MessageFlagsEphemeral,
 			},
-		},
-	})
+		})
 
-	err := session.ApplicationCommandDelete(session.State.User.ID, "", event.ApplicationCommandData().ID)
-	if err != nil {
-		log.Printf("Unable to delete global command %s: %v\n", event.ApplicationCommandData().Name, err)
+		err := session.ApplicationCommandDelete(session.State.User.ID, "", event.ApplicationCommandData().ID)
+		if err != nil {
+			log.Printf("Unable to delete global command %s: %v\n", event.ApplicationCommandData().Name, err)
+		}
+
+		err = session.ApplicationCommandDelete(session.State.User.ID, event.GuildID, event.ApplicationCommandData().ID)
+		if err != nil {
+			log.Printf("Unable to delete guild-specific command %s: %v\n", event.ApplicationCommandData().Name, err)
+		}
+
+		log.Printf("Deleted command %s\n", event.ApplicationCommandData().Name)
 		return
 	}
 
-	err = session.ApplicationCommandDelete(session.State.User.ID, event.GuildID, event.ApplicationCommandData().ID)
-	if err != nil {
-		log.Printf("Unable to delete guild-specific command %s: %v\n", event.ApplicationCommandData().Name, err)
+	if command.permissionLevel() > GetPermissionLevel(GetUser(event).ID) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "You do not have permission to use this command.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
 		return
 	}
 
-	log.Printf("Deleted command %s\n", event.ApplicationCommandData().Name)
+	command.execute(session, event)
 }

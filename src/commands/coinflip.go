@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/bwmarrin/discordgo"
 	"math/rand"
+	"sandwich-delivery/src/models"
 )
 
 type CoinflipCommand struct{}
@@ -17,6 +18,10 @@ func (c CoinflipCommand) getCommandData() *discordgo.ApplicationCommand {
 
 func (c CoinflipCommand) registerGuild() string {
 	return ""
+}
+
+func (c CoinflipCommand) permissionLevel() models.UserPermissionLevel {
+	return models.PermissionLevelUser
 }
 
 func (c CoinflipCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {

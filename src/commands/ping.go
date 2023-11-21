@@ -1,6 +1,9 @@
 package commands
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/bwmarrin/discordgo"
+	"sandwich-delivery/src/models"
+)
 
 type PingCommand struct{}
 
@@ -14,6 +17,10 @@ func (c PingCommand) getCommandData() *discordgo.ApplicationCommand {
 
 func (c PingCommand) registerGuild() string {
 	return ""
+}
+
+func (c PingCommand) permissionLevel() models.UserPermissionLevel {
+	return models.PermissionLevelUser
 }
 
 func (c PingCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
