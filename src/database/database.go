@@ -8,32 +8,37 @@ import (
 	"sandwich-delivery/src/models"
 )
 
-var Database *gorm.DB
+var database *gorm.DB
 
-func Init(config config.Config) *gorm.DB {
+func Init(config *config.Config) *gorm.DB {
 	log.Println("Opening Connection...")
-	Database, err := gorm.Open(mysql.Open(config.MySQLDSN), &gorm.Config{})
+
+	database, err := gorm.Open(mysql.New(mysql.Config{DSN: config.MySQLDSN}), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %v", err)
 	}
 
 	migrateTables()
 
-	return Database
+	return database
 }
 
 func migrateTables() {
 	log.Println("Migrating Blacklist Database...")
-	err := Database.AutoMigrate(&models.BlacklistUser{})
+	err := GetDB().AutoMigrate(&models.BlacklistUser{})
 	if err != nil {
 		log.Fatal("Error migrating database:", err)
 		return
 	}
 
 	log.Println("Migrating Orders Database...")
-	err = Database.AutoMigrate(&models.Order{})
+	err = GetDB().AutoMigrate(&models.Order{})
 	if err != nil {
 		log.Fatal("Error migrating database:", err)
 		return
 	}
+}
+
+func GetDB() *gorm.DB {
+	return database
 }

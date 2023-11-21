@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/bwmarrin/discordgo"
 	"gorm.io/gorm"
+	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/models"
 )
 
@@ -13,20 +14,36 @@ type Command interface {
 	execute(session *discordgo.Session, event *discordgo.InteractionCreate)
 }
 
-func DisplayName(s *discordgo.Session, m *discordgo.MessageCreate) string {
-	var displayname string
-	if m.Author.Discriminator != "0" {
-		displayname = m.Author.Username + "#" + m.Author.Discriminator
+func DisplayName(event *discordgo.InteractionCreate) string {
+	user := GetUser(event)
+
+	if user.Discriminator != "0" {
+		return user.Username
 	} else {
-		displayname = m.Author.Username
+		return user.Username + "#" + user.Discriminator
 	}
-	return displayname
+}
+
+func GetUser(event *discordgo.InteractionCreate) *discordgo.User {
+	if InteractionIsDM(event) {
+		return event.User
+	} else {
+		return event.Member.User
+	}
+}
+
+func InteractionIsDM(event *discordgo.InteractionCreate) bool {
+	return event.GuildID == ""
 }
 
 func IsUserBlacklisted(db *gorm.DB, userID string) bool {
 	var user models.BlacklistUser
 
-	result := db.Select("user_id").Where("user_id = ?", userID).First(&user)
+	result := db.First(&user, "user_id = ?", userID)
 
 	return result.Error == nil
+}
+
+func IsOwner(event *discordgo.InteractionCreate) bool {
+	return event.Member.User.ID == config.GetConfig().OwnerID
 }

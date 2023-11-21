@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"log"
 	"os"
@@ -17,16 +16,11 @@ import (
 )
 
 func main() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-
 	startTime := time.Now()
 	configPath := "config.json"
 
 	log.Println("Loading Config...")
 	cfg, err := config.LoadConfig(configPath)
-	if err != nil {
-		log.Fatalf("Error loading configuration: %v", err)
-	}
 
 	log.Println("Initializing Database...")
 	database.Init(cfg)
@@ -57,7 +51,7 @@ func main() {
 	sess.ChannelMessageSend("1171665367454716016", startupMessage)
 
 	go func() {
-		updateStatusPeriodically(sess, database.Database)
+		updateStatusPeriodically(sess, database.GetDB())
 	}()
 
 	log.Println("Bot is running!")

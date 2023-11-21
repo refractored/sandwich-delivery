@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 )
 
@@ -15,20 +16,26 @@ type Config struct {
 	GuildID      string `json:"guildID,omitempty"`
 }
 
-// LoadConfig reads the configuration from a JSON file and returns a Config struct.
-func LoadConfig(filePath string) (Config, error) {
-	var config Config
+var config *Config
 
+// LoadConfig reads the configuration from a JSON file and returns a Config struct.
+func LoadConfig(filePath string) (*Config, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return config, err
+		log.Fatal(err)
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&config); err != nil {
-		return config, err
+	err = decoder.Decode(&config)
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	return config, nil
+}
+
+func GetConfig() *Config {
+	return config
 }

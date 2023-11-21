@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// todo: decide if we're going to use slash commands for this.
 func BlacklistCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
 	args := strings.Split(m.Content, " ")
 
