@@ -12,7 +12,11 @@ func (c CoinflipCommand) getName() string {
 }
 
 func (c CoinflipCommand) getCommandData() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "idk"}
+	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Flip a virtual coin."}
+}
+
+func (c CoinflipCommand) registerGuild() string {
+	return ""
 }
 
 func (c CoinflipCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {

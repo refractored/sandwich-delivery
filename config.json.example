@@ -1,7 +1,7 @@
 {
   "token": "BOT_TOKEN",
-  "prefix": ";",
   "supportguild": "1234",
-  "mysqldsn": "user:password@tcp(localhost:3306)/your_database_name"
-  "ownerid": "1234"
+  "mysqldsn": "user:password@tcp(localhost:3306)/your_database_name",
+  "ownerid": "1234",
+  "guildid": "1234",
 }

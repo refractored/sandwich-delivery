@@ -2,15 +2,31 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
 	"sandwich-delivery/src/config"
+	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
+	"slices"
 )
 
 type Command interface {
+	/**
+	 * Returns the name of the command.
+	 */
 	getName() string
+
+	/**
+	 * Returns the command data for this command.
+	 */
 	getCommandData() *discordgo.ApplicationCommand
 
+	/**
+	 * Returns the guild ID that this command should be registered to, or an empty string if it should be registered globally.
+	 */
+	registerGuild() string
+
+	/**
+	 * Executes the command.
+	 */
 	execute(session *discordgo.Session, event *discordgo.InteractionCreate)
 }
 
@@ -36,14 +52,20 @@ func InteractionIsDM(event *discordgo.InteractionCreate) bool {
 	return event.GuildID == ""
 }
 
-func IsUserBlacklisted(db *gorm.DB, userID string) bool {
+func IsUserBlacklisted(userID string) bool {
+	if IsOwner(userID) {
+		return false
+	}
+
 	var user models.BlacklistUser
+
+	db := database.GetDB()
 
 	result := db.First(&user, "user_id = ?", userID)
 
-	return result.Error == nil
+	return result.RowsAffected > 0
 }
 
-func IsOwner(event *discordgo.InteractionCreate) bool {
-	return event.Member.User.ID == config.GetConfig().OwnerID
+func IsOwner(userID string) bool {
+	return slices.Contains(config.GetConfig().Owners, userID)
 }

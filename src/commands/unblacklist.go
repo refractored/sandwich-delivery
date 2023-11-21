@@ -2,33 +2,78 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
+	"sandwich-delivery/src/config"
+	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
-	"strings"
 )
 
-//todo: decide if we're going to use slash commands for this.
+type UnblacklistCommand struct{}
 
-func UnblacklistCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
-	args := strings.Split(m.Content, " ")
+func (c UnblacklistCommand) getName() string {
+	return "unblacklist"
+}
 
-	if len(args) < 3 {
-		s.ChannelMessageSend(m.ChannelID, "Usage: !unblacklist <user_id>")
+func (c UnblacklistCommand) getCommandData() *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{
+		Name:        c.getName(),
+		Description: "Unblacklist a user from using the bot.",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "The user to unblacklist.",
+				Required:    true,
+			},
+		},
+	}
+}
+
+func (c UnblacklistCommand) registerGuild() string {
+	return config.GetConfig().GuildID
+}
+
+func (c UnblacklistCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	if !IsOwner(GetUser(event).ID) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "You are not the bot owner!",
+			},
+		})
 		return
 	}
 
-	userID := args[2]
+	user := event.ApplicationCommandData().Options[0].UserValue(session)
 
-	if !IsUserBlacklisted(db, userID) {
-		s.ChannelMessageSend(m.ChannelID, "User is not blacklisted.")
+	if !IsUserBlacklisted(user.ID) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "User is not blacklisted.",
+			},
+		})
 		return
 	}
 
-	err := db.Delete(&models.BlacklistUser{}, "user_id = ?", userID).Error
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "Error unblacklisting the user.")
+	resp := database.GetDB().Delete(&models.BlacklistUser{}, "user_id = ?", user.ID)
+
+	if resp.Error != nil {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "Error unblacklisting the user.",
+			},
+		})
 		return
 	}
 
-	s.ChannelMessageSend(m.ChannelID, "User unblacklisted successfully.")
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "User unblacklisted successfully.",
+		},
+	})
 }

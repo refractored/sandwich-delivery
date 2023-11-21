@@ -1,30 +1,45 @@
 package commands
 
 import (
-	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"os"
+	"log"
 )
 
 var commands = map[string]Command{
-	CoinflipCommand{}.getName(): CoinflipCommand{},
-	OrderCommand{}.getName():    OrderCommand{},
+	CoinflipCommand{}.getName():    CoinflipCommand{},
+	OrderCommand{}.getName():       OrderCommand{},
+	DelOrderCommand{}.getName():    DelOrderCommand{},
+	PingCommand{}.getName():        PingCommand{},
+	ShutdownCommand{}.getName():    ShutdownCommand{},
+	BlacklistCommand{}.getName():   BlacklistCommand{},
+	UnblacklistCommand{}.getName(): UnblacklistCommand{},
 }
 
 func RegisterCommands(session *discordgo.Session) {
 	for n, d := range commands {
-		_, err := session.ApplicationCommandCreate(session.State.User.ID, "823334764307415122", d.getCommandData())
+		_, err := session.ApplicationCommandCreate(session.State.User.ID, d.registerGuild(), d.getCommandData())
 		if err != nil {
-			fmt.Printf("Unable to register command %s: %v\n", n, err)
-			os.Exit(1)
+			log.Fatalf("Unable to register command %s: %v\n", n, err)
 		}
 
-		fmt.Printf("Registered command %s\n", n)
+		log.Printf("Registered command %s\n", n)
 	}
 }
 
 func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	if event.Type != discordgo.InteractionApplicationCommand {
+		return
+	}
+
+	if IsUserBlacklisted(GetUser(event).ID) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "You are blacklisted from using this bot.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
 		return
 	}
 
@@ -37,6 +52,7 @@ func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreat
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
+			// todo https://github.com/refractored/sandwich-delivery/issues/5
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "Error",
@@ -55,8 +71,17 @@ func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreat
 		},
 	})
 
-	err := session.ApplicationCommandDelete(session.State.User.ID, "", event.ApplicationCommandData().Name)
+	err := session.ApplicationCommandDelete(session.State.User.ID, "", event.ApplicationCommandData().ID)
 	if err != nil {
+		log.Printf("Unable to delete global command %s: %v\n", event.ApplicationCommandData().Name, err)
 		return
 	}
+
+	err = session.ApplicationCommandDelete(session.State.User.ID, event.GuildID, event.ApplicationCommandData().ID)
+	if err != nil {
+		log.Printf("Unable to delete guild-specific command %s: %v\n", event.ApplicationCommandData().Name, err)
+		return
+	}
+
+	log.Printf("Deleted command %s\n", event.ApplicationCommandData().Name)
 }

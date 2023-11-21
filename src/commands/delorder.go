@@ -8,15 +8,21 @@ import (
 
 type DelOrderCommand struct{}
 
-func (d *DelOrderCommand) getName() string {
+func (c DelOrderCommand) getName() string {
 	return "delorder"
 }
 
-func (d *DelOrderCommand) getCommandData() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{Name: d.getName(), Description: "Deletes your pending order."}
+func (c DelOrderCommand) getCommandData() *discordgo.ApplicationCommand {
+	DMPermission := new(bool)
+	*DMPermission = false
+	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Deletes your pending order.", DMPermission: DMPermission}
 }
 
-func (d *DelOrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+func (c DelOrderCommand) registerGuild() string {
+	return ""
+}
+
+func (c DelOrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	if InteractionIsDM(event) {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -28,10 +34,10 @@ func (d *DelOrderCommand) execute(session *discordgo.Session, event *discordgo.I
 		return
 	}
 
-	var user models.Order
+	var order models.Order
 
-	resp := database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
-	if resp.Error != nil {
+	resp := database.GetDB().First(&order, "user_id = ?", GetUser(event).ID)
+	if resp.RowsAffected == 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -55,7 +61,7 @@ func (d *DelOrderCommand) execute(session *discordgo.Session, event *discordgo.I
 		})
 		return
 	}
-	resp = database.GetDB().Delete(&models.Order{}, "user_id = ?", GetUser(event).ID)
+	resp = database.GetDB().Delete(order)
 	if resp.Error != nil {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

@@ -8,12 +8,10 @@ import (
 
 // Config represents the bot configuration.
 type Config struct {
-	Token        string `json:"token"`
-	Prefix       string `json:"prefix"`
-	SupportGuild string `json:"supportguild"`
-	MySQLDSN     string `json:"mysqldsn"`
-	OwnerID      string `json:"ownerid"`
-	GuildID      string `json:"guildID,omitempty"`
+	Token    string   `json:"token"`
+	MySQLDSN string   `json:"mysqldsn"`
+	Owners   []string `json:"owners"`
+	GuildID  string   `json:"guildid"`
 }
 
 var config *Config

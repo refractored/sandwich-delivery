@@ -2,32 +2,77 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
+	"sandwich-delivery/src/config"
+	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
-	"strings"
 )
 
-// todo: decide if we're going to use slash commands for this.
-func BlacklistCommand(s *discordgo.Session, m *discordgo.MessageCreate, db *gorm.DB) {
-	args := strings.Split(m.Content, " ")
+type BlacklistCommand struct{}
 
-	if len(args) < 3 {
-		s.ChannelMessageSend(m.ChannelID, "Usage: % blacklist <user_id>")
+func (c BlacklistCommand) getName() string {
+	return "blacklist"
+}
+
+func (c BlacklistCommand) getCommandData() *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{
+		Name:        c.getName(),
+		Description: "Blacklist a user from using the bot.",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "The user to blacklist.",
+				Required:    true,
+			},
+		},
+	}
+}
+
+func (c BlacklistCommand) registerGuild() string {
+	return config.GetConfig().GuildID
+}
+
+func (c BlacklistCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	if !IsOwner(GetUser(event).ID) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "You are not the bot owner!",
+			},
+		})
 		return
 	}
 
-	userID := args[2]
+	user := event.ApplicationCommandData().Options[0].UserValue(session)
 
-	if IsUserBlacklisted(db, userID) {
-		s.ChannelMessageSend(m.ChannelID, "User is already blacklisted.")
+	if IsUserBlacklisted(user.ID) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "User is already blacklisted.",
+			},
+		})
 		return
 	}
 
-	err := db.Create(&models.BlacklistUser{UserID: userID}).Error
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "Error blacklisting the user.")
+	resp := database.GetDB().Create(&models.BlacklistUser{UserID: user.ID})
+	if resp.Error != nil {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "Error blacklisting the user.",
+			},
+		})
 		return
 	}
 
-	s.ChannelMessageSend(m.ChannelID, "User blacklisted successfully.")
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "User blacklisted successfully.",
+		},
+	})
 }

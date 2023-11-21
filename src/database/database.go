@@ -13,7 +13,10 @@ var database *gorm.DB
 func Init(config *config.Config) *gorm.DB {
 	log.Println("Opening Connection...")
 
-	database, err := gorm.Open(mysql.New(mysql.Config{DSN: config.MySQLDSN}), &gorm.Config{})
+	db, err := gorm.Open(mysql.New(mysql.Config{DSN: config.MySQLDSN}), &gorm.Config{})
+
+	database = db
+
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %v", err)
 	}

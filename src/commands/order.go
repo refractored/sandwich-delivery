@@ -9,13 +9,15 @@ import (
 
 type OrderCommand struct{}
 
-func (o OrderCommand) getName() string {
+func (c OrderCommand) getName() string {
 	return "order"
 }
 
-func (o OrderCommand) getCommandData() *discordgo.ApplicationCommand {
+func (c OrderCommand) getCommandData() *discordgo.ApplicationCommand {
+	DMPermission := new(bool)
+	*DMPermission = false
 	return &discordgo.ApplicationCommand{
-		Name:        o.getName(),
+		Name:        c.getName(),
 		Description: "Order something!",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
@@ -25,10 +27,15 @@ func (o OrderCommand) getCommandData() *discordgo.ApplicationCommand {
 				Required:    true,
 			},
 		},
+		DMPermission: DMPermission,
 	}
 }
 
-func (o OrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+func (c OrderCommand) registerGuild() string {
+	return ""
+}
+
+func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	if InteractionIsDM(event) {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -44,7 +51,7 @@ func (o OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	var user models.Order
 
 	resp := database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
-	if resp.Error == nil {
+	if resp.RowsAffected > 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -122,7 +129,7 @@ func (o OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 						IconURL: session.State.User.AvatarURL("256"),
 					},
 					Fields: []*discordgo.MessageEmbedField{
-						&discordgo.MessageEmbedField{
+						{
 							Name:   "Your Order:",
 							Value:  order,
 							Inline: false,

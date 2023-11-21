@@ -4,19 +4,24 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"math/rand"
 	"os"
+	"sandwich-delivery/src/config"
 )
 
 type ShutdownCommand struct{}
 
-func (s ShutdownCommand) getName() string {
+func (c ShutdownCommand) getName() string {
 	return "shutdown"
 }
 
-func (s ShutdownCommand) getCommandData() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{Name: s.getName(), Description: "Shuts down the bot."}
+func (c ShutdownCommand) getCommandData() *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Shuts down the bot."}
 }
 
-func (s ShutdownCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+func (c ShutdownCommand) registerGuild() string {
+	return config.GetConfig().GuildID
+}
+
+func (c ShutdownCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var shutdownMessages = []string{
 		"Was it something I did? :( *(Shutting Down)*",
 		"Whatever you say... *(Shutting Down)*",
@@ -27,7 +32,7 @@ func (s ShutdownCommand) execute(session *discordgo.Session, event *discordgo.In
 
 	selection := rand.Intn(len(shutdownMessages))
 
-	if !IsOwner(event) {
+	if !IsOwner(GetUser(event).ID) {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{

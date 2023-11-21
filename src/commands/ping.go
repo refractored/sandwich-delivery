@@ -4,15 +4,19 @@ import "github.com/bwmarrin/discordgo"
 
 type PingCommand struct{}
 
-func (p PingCommand) getName() string {
+func (c PingCommand) getName() string {
 	return "ping"
 }
 
-func (p PingCommand) getCommandData() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{Name: p.getName(), Description: "Pong!"}
+func (c PingCommand) getCommandData() *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Pong!"}
 }
 
-func (p PingCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+func (c PingCommand) registerGuild() string {
+	return ""
+}
+
+func (c PingCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
