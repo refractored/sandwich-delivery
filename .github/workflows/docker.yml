@@ -17,7 +17,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: docker.pkg.github.com/${{ github.repository }}/sandwich-delivery
+          images: ghcr.io/${{ github.repository }}/sandwich-delivery
           flavor: |
             latest=false
           tags: |
