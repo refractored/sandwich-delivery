@@ -46,5 +46,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ steps.meta.outputs.cache-from }}
           cache-to: type=inline
-          load: true
           platforms: linux/amd64,linux/arm64
