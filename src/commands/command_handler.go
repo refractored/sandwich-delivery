@@ -36,14 +36,10 @@ func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreat
 
 	// Create user in database if they don't exist
 	if !DoesUserExist(GetUser(event).ID) {
-		database.GetDB().Create(&models.User{
-			UserID:          GetUser(event).ID,
-			Credits:         0,
-			OrdersCreated:   0,
-			OrdersAccepted:  0,
-			PermissionLevel: 0,
-			IsBlacklisted:   false,
-		})
+		var user models.User
+		user.UserID = GetUser(event).ID
+
+		database.GetDB().Create(&user)
 	}
 
 	if IsUserBlacklisted(GetUser(event).ID) {
