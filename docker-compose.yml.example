@@ -1,0 +1,5 @@
+services:
+    sandwich-delivery:
+        image: ghcr.io/refractored/sandwich-delivery:latest
+        volumes:
+            - ./work:/app/work
