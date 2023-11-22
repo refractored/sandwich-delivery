@@ -47,6 +47,18 @@ func InteractionIsDM(event *discordgo.InteractionCreate) bool {
 	return event.GuildID == ""
 }
 
+func DoesUserExist(userID string) bool {
+	var user models.User
+
+	resp := database.GetDB().First(&user, "user_id = ?", userID)
+
+	if resp.RowsAffected == 0 {
+		return false
+	}
+
+	return true
+}
+
 func IsUserBlacklisted(userID string) bool {
 	if GetPermissionLevel(userID) == models.PermissionLevelOwner {
 		return false
