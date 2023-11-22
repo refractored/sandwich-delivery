@@ -52,6 +52,7 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	orderOption := event.ApplicationCommandData().Options[0].StringValue()
 
 	var order models.Order
+	var user models.User
 
 	resp := database.GetDB().First(&order, "user_id = ? AND delivered = ?", GetUser(event).ID, false)
 	if resp.RowsAffected > 0 {
@@ -78,6 +79,37 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 		})
 		return
 	}
+
+	resp = database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
+
+	if user.Credits < 1 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					// todo https://github.com/refractored/sandwich-delivery/issues/5
+					{
+						Title:       "Error!",
+						Description: "You do not have enough Credits to order!",
+						Color:       0xff2c2c, // Green color
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Executed by " + DisplayName(event),
+							IconURL: GetUser(event).AvatarURL("256"),
+						},
+						Author: &discordgo.MessageEmbedAuthor{
+							Name:    "Sandwich Delivery",
+							IconURL: session.State.User.AvatarURL("256"),
+						},
+					},
+				},
+			},
+		})
+		return
+	}
+
+	user.Credits = user.Credits - 1
+	user.OrdersCreated = user.OrdersCreated + 1
+	database.GetDB().Save(&user)
 
 	order = models.Order{
 		UserID:           GetUser(event).ID,
