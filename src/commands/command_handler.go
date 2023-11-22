@@ -39,7 +39,7 @@ func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreat
 		var user models.User
 		user.UserID = GetUser(event).ID
 
-		database.GetDB().Create(&user)
+		database.GetDB().Save(&user)
 	}
 
 	if IsUserBlacklisted(GetUser(event).ID) {

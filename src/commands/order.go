@@ -49,11 +49,11 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 		})
 	}
 
-	order := event.ApplicationCommandData().Options[0].StringValue()
+	orderOption := event.ApplicationCommandData().Options[0].StringValue()
 
-	var user models.Order
+	var order models.Order
 
-	resp := database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
+	resp := database.GetDB().First(&order, "user_id = ? AND delivered = ?", GetUser(event).ID, false)
 	if resp.RowsAffected > 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -79,14 +79,15 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 		return
 	}
 
-	resp = database.GetDB().Create(&models.Order{
+	order = models.Order{
 		UserID:           GetUser(event).ID,
-		OrderDescription: order,
-		Username:         GetUser(event).Username,
-		Discriminator:    GetUser(event).Discriminator,
-		ServerID:         event.GuildID,
-		ChannelID:        event.ChannelID,
-	})
+		OrderDescription: orderOption,
+		Delivered:        false,
+		SourceServer:     event.GuildID,
+		SourceChannel:    event.GuildID,
+	}
+
+	resp = database.GetDB().Save(&order)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -108,7 +109,7 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 					Fields: []*discordgo.MessageEmbedField{
 						{
 							Name:   "Your Order:",
-							Value:  order,
+							Value:  orderOption,
 							Inline: false,
 						},
 					},

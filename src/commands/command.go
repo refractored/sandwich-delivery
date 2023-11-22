@@ -52,11 +52,7 @@ func DoesUserExist(userID string) bool {
 
 	resp := database.GetDB().First(&user, "user_id = ?", userID)
 
-	if resp.RowsAffected == 0 {
-		return false
-	}
-
-	return true
+	return resp.RowsAffected != 0
 }
 
 func IsUserBlacklisted(userID string) bool {

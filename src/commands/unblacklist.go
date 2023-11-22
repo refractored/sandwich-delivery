@@ -53,7 +53,8 @@ func (c UnblacklistCommand) execute(session *discordgo.Session, event *discordgo
 		return
 	}
 
-	database.GetDB().Delete(&user, "user_id = ?", user.ID)
+	user.IsBlacklisted = false
+	database.GetDB().Save(&user)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
