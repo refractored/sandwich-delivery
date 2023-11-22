@@ -42,7 +42,7 @@ func (c CoinflipCommand) execute(session *discordgo.Session, event *discordgo.In
 					},
 					Author: &discordgo.MessageEmbedAuthor{
 						Name:    "Sandwich Delivery",
-						IconURL: GetUser(event).AvatarURL("256"),
+						IconURL: session.State.User.AvatarURL("256"),
 					},
 				},
 			},
