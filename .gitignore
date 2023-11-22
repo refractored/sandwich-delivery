@@ -5,3 +5,6 @@ docker-compose.yml
 .env
 
 build/
+
+.idea/
+*.iml
