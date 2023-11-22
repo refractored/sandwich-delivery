@@ -41,24 +41,10 @@ func (c BlacklistCommand) execute(session *discordgo.Session, event *discordgo.I
 
 	var user models.User
 
-	resp := database.GetDB().First(&user, "user_id = ?", userOption.ID)
-	if resp.RowsAffected == 0 {
-		user.UserID = userOption.ID
-		user.IsBlacklisted = true
-		database.GetDB().Create(&user)
-
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "User blacklisted successfully.",
-			},
-		})
-		return
-	}
+	database.GetDB().First(&user, "user_id = ?", userOption.ID)
 
 	user.IsBlacklisted = true
-
-	resp = database.GetDB().Model(&user).Updates(&user)
+	database.GetDB().Save(&user)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

@@ -5,12 +5,12 @@ import "time"
 type User struct {
 	ID              uint `gorm:"primaryKey"`
 	UserID          string
-	Credits         uint64
-	OrdersCreated   uint64
-	OrdersAccepted  uint64
+	Credits         uint32
+	OrdersCreated   uint32
+	OrdersAccepted  uint32
 	PermissionLevel UserPermissionLevel
 	IsBlacklisted   bool
-	CreatedAt       time.Time `gorm:"type:datetime"`
+	CreatedAt       time.Time `gorm:"<-:create type:datetime"`
 }
 
 type UserPermissionLevel uint8

@@ -8,10 +8,10 @@ type Order struct {
 	ID               uint `gorm:"primaryKey"`
 	UserID           string
 	OrderDescription string
-	Username         string
-	Discriminator    string
-	ServerID         string
-	ChannelID        string
-	CreatedAt        time.Time  `gorm:"type:datetime"`
-	DeletedAt        *time.Time `gorm:"index"`
+	SourceServer     string
+	SourceChannel    string
+	Delivered        bool
+	CreatedAt        time.Time `gorm:"<-:create type:datetime"`
+	DeliveredAt      time.Time `gorm:"type:datetime"`
+	DeletedAt        time.Time `gorm:"index"`
 }
