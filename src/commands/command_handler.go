@@ -3,6 +3,8 @@ package commands
 import (
 	"github.com/bwmarrin/discordgo"
 	"log"
+	"sandwich-delivery/src/database"
+	"sandwich-delivery/src/models"
 )
 
 var commands = map[string]Command{
@@ -30,6 +32,21 @@ func RegisterCommands(session *discordgo.Session) {
 func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	if event.Type != discordgo.InteractionApplicationCommand {
 		return
+	}
+
+	if !DoesUserExist(GetUser(event).ID) {
+		resp := database.GetDB().Create(&models.User{
+			UserID:          GetUser(event).ID,
+			Credits:         0,
+			OrdersCreated:   0,
+			OrdersAccepted:  0,
+			PermissionLevel: 0,
+			IsBlacklisted:   false,
+		})
+		if resp.RowsAffected == 0 {
+			log.Println("Unable to create user " + GetUser(event).ID)
+		}
+
 	}
 
 	if IsUserBlacklisted(GetUser(event).ID) {
