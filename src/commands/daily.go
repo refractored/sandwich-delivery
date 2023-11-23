@@ -27,7 +27,6 @@ func (c DailyCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-
 	var user models.User
 
 	database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
@@ -35,7 +34,6 @@ func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	elapsed := time.Since(user.DailyClaimedAt)
 
 	if elapsed.Hours() >= 24 {
-
 		user.Credits = user.Credits + 1
 		user.DailyClaimedAt = time.Now()
 		database.GetDB().Save(&user)
@@ -61,11 +59,8 @@ func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.Inter
 				},
 			},
 		})
-
 		return
-
 	} else {
-
 		remainingTime := 24*time.Hour - elapsed
 		remainingTimeString := fmt.Sprintf("%d hours, %d minutes, %d seconds",
 			int(remainingTime.Hours()), int(remainingTime.Minutes())%60, int(remainingTime.Seconds())%60)
@@ -91,7 +86,6 @@ func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.Inter
 				},
 			},
 		})
-
 		return
 	}
 }
