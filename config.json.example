@@ -1,6 +1,6 @@
 {
     "token": "secret",
-    "owners": ["you", "and", "your", "friends],
+    "owners": ["you", "and", "your", "friends"],
     "guildID": "some numbers",
 
     "database": {
