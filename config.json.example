@@ -3,4 +3,5 @@
   "mysqldsn": "user:password@tcp(localhost:3306)/your_database_name?parseTime=true",
   "owners": ["1234", "1234"],
   "guildid": "1234"
+  "kitchenid": "1234"
 }

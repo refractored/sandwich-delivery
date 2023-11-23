@@ -1,9 +1,12 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
+	"time"
 )
 
 type OrderCommand struct{}
@@ -149,4 +152,30 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 			},
 		},
 	})
+	unixCurrentTime := time.Now().Unix()
+	unixTimeString := fmt.Sprintf("%d", unixCurrentTime)
+	kitchenNotifyEmbed := &discordgo.MessageEmbed{
+		Title: "Order Created!",
+		Description: fmt.Sprintf("Order ID: %d", order.ID) +
+			"\nOrdered at: <t:" + unixTimeString + ":f>" +
+			"\nPlaced: <t:" + unixTimeString + ":R>",
+		Color: 0x00ff00,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text:    "Order Created by " + DisplayName(event),
+			IconURL: GetUser(event).AvatarURL("256"),
+		},
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    "Sandwich Delivery",
+			IconURL: session.State.User.AvatarURL("256"),
+		},
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Order:",
+				Value:  orderOption,
+				Inline: false,
+			},
+		},
+	}
+	kitchenID := config.GetConfig().KitchenID
+	session.ChannelMessageSendEmbed(kitchenID, kitchenNotifyEmbed)
 }
