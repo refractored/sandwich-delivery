@@ -1,6 +1,7 @@
 package models
 
 import (
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -13,5 +14,5 @@ type Order struct {
 	Delivered        bool
 	CreatedAt        time.Time `gorm:"<-:create type:datetime"`
 	DeliveredAt      time.Time `gorm:"type:datetime"`
-	DeletedAt        time.Time `gorm:"index"`
+	DeletedAt        gorm.DeletedAt
 }
