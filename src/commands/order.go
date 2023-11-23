@@ -116,7 +116,7 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 		OrderDescription: orderOption,
 		Delivered:        false,
 		SourceServer:     event.GuildID,
-		SourceChannel:    event.GuildID,
+		SourceChannel:    event.ChannelID,
 	}
 
 	resp = database.GetDB().Save(&order)
