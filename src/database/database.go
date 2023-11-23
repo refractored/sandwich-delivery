@@ -7,6 +7,7 @@ import (
 	"log"
 	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/models"
+	"strings"
 )
 
 var database *gorm.DB
@@ -53,6 +54,11 @@ func generateDSN() string {
 
 	if config.GetConfig().Database.URL != "" {
 		dsn = config.GetConfig().Database.URL
+
+		if !strings.ContainsAny(dsn, "parseTime=true") {
+			log.Println("Warning: parseTime=true is not set in the database URL. This WILL cause issues.")
+		}
+
 	} else {
 		if len(config.GetConfig().Database.ExtraOptions) == 0 {
 			dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", config.GetConfig().Database.User, config.GetConfig().Database.Password, config.GetConfig().Database.Host, config.GetConfig().Database.Port, config.GetConfig().Database.DBName)

@@ -75,19 +75,19 @@ func VerifyConfig(config *Config) (bool, error) {
 		return false, &Error{"guildID is not set"}
 	}
 
-	if config.Database.Host == "" {
+	if config.Database.Host == "" && config.Database.URL == "" {
 		return false, &Error{"Database host is not set"}
 	}
 
-	if config.Database.Port == 0 {
+	if config.Database.Port == 0 && config.Database.URL == "" {
 		return false, &Error{"Database port is not set"}
 	}
 
-	if config.Database.User == "" {
+	if config.Database.User == "" && config.Database.URL == "" {
 		return false, &Error{"Database user is not set"}
 	}
 
-	if config.Database.DBName == "" {
+	if config.Database.DBName == "" && config.Database.URL == "" {
 		return false, &Error{"Database name is not set"}
 	}
 
