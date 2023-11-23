@@ -1,6 +1,13 @@
 {
-  "token": "BOT_TOKEN",
-  "mysqldsn": "user:password@tcp(localhost:3306)/your_database_name?parseTime=true",
-  "owners": ["1234", "1234"],
-  "guildid": "1234"
+    "token": "secret",
+    "owners": ["you", "and", "your", "friends],
+    "guildID": "some numbers",
+
+    "database": {
+        "host": "127.0.0.1",
+        "port": 3306,
+        "user": "sandwich",
+        "password": "secret",
+        "database": "sandwich"
+    }
 }
