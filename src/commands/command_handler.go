@@ -16,6 +16,7 @@ var commands = map[string]Command{
 	BlacklistCommand{}.getName():          BlacklistCommand{},
 	UnblacklistCommand{}.getName():        UnblacklistCommand{},
 	SetPermissionLevelCommand{}.getName(): SetPermissionLevelCommand{},
+	DailyCommand{}.getName():              DailyCommand{},
 }
 
 func RegisterCommands(session *discordgo.Session) {
