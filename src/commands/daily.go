@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
 	"time"
@@ -27,6 +28,25 @@ func (c DailyCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	if *config.GetConfig().DailyTokens == 0 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "Error!",
+						Description: "Daily rewards are disabled!",
+						Color:       0xff2c2c,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Executed by " + DisplayName(event),
+							IconURL: GetUser(event).AvatarURL("256"),
+						},
+					},
+				},
+			},
+		})
+	}
+
 	var user models.User
 
 	database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
@@ -34,9 +54,17 @@ func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	elapsed := time.Since(user.DailyClaimedAt)
 
 	if elapsed.Hours() >= 24 {
-		user.Credits = user.Credits + 1
+		user.Credits = user.Credits + *config.GetConfig().DailyTokens
 		user.DailyClaimedAt = time.Now()
 		database.GetDB().Save(&user)
+
+		var tokenMessage string
+
+		if *config.GetConfig().DailyTokens == 1 {
+			tokenMessage = "+1 Credit"
+		} else {
+			tokenMessage = fmt.Sprintf("+%d Credits", *config.GetConfig().DailyTokens)
+		}
 
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -44,7 +72,7 @@ func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.Inter
 				Embeds: []*discordgo.MessageEmbed{
 					{
 						Title: "Reward Claimed!",
-						Description: "+1 Credit" +
+						Description: tokenMessage +
 							"\nCome back in 24 hours for another reward!",
 						Color: 0x00ff00,
 						Footer: &discordgo.MessageEmbedFooter{
