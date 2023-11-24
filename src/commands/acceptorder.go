@@ -54,20 +54,15 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 		})
 		return
 	}
-	if order.Assignee != "" {
+	if order.Status != models.StatusWaiting {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "Order already accepted.",
+				Content: "This order can no longer be accepted!",
 			},
 		})
 		return
 	}
-	order.Assignee = GetUser(event).ID
-	order.AcceptedAt = time.Now()
-	order.Status = models.StatusAccepted
-	resp = database.GetDB().Save(&order)
-
 	_, err := session.ChannelMessageSendComplex(order.SourceChannel, &discordgo.MessageSend{
 		Content: "<@" + order.UserID + ">",
 		Embed: &discordgo.MessageEmbed{
@@ -99,9 +94,41 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 				Content: "Order Location Invalid! Order Deleted.",
 			},
 		})
+		dmMessage, _ := session.UserChannelCreate(order.UserID)
+		session.ChannelMessageSendComplex(dmMessage.ID, &discordgo.MessageSend{
+			Content: "<@" + order.UserID + ">",
+			Embed: &discordgo.MessageEmbed{
+				Title: "Order Error!",
+				Description: "Your order could not be completed!" + "\n" +
+					"The bot was unable to send a message into the channel you ordered from so it was deleted!",
+				Color: 0xff2c2c,
+				Footer: &discordgo.MessageEmbedFooter{
+					Text:    "Accept Command ran by " + DisplayName(event),
+					IconURL: GetUser(event).AvatarURL("256"),
+				},
+				Author: &discordgo.MessageEmbedAuthor{
+					Name:    "Sandwich Delivery",
+					IconURL: session.State.User.AvatarURL("256"),
+				},
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:   "Order:",
+						Value:  order.OrderDescription,
+						Inline: false,
+					},
+				},
+			},
+		})
+		order.Status = models.StatusError
+		database.GetDB().Save(&order)
 		database.GetDB().Delete(&order)
 		return
 	}
+
+	order.Assignee = GetUser(event).ID
+	order.AcceptedAt = time.Now()
+	order.Status = models.StatusAccepted
+	resp = database.GetDB().Save(&order)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
