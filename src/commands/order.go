@@ -117,7 +117,7 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	order = models.Order{
 		UserID:           GetUser(event).ID,
 		OrderDescription: orderOption,
-		Delivered:        false,
+		Status:           models.StatusWaiting,
 		SourceServer:     event.GuildID,
 		SourceChannel:    event.ChannelID,
 	}

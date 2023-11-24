@@ -65,6 +65,7 @@ func (c DelOrderCommand) execute(session *discordgo.Session, event *discordgo.In
 		})
 		return
 	}
+	order.Status = models.StatusCancelled
 	resp = database.GetDB().Delete(&order)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{

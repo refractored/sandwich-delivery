@@ -65,6 +65,7 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 	}
 	order.Assignee = GetUser(event).ID
 	order.AcceptedAt = time.Now()
+	order.Status = models.StatusAccepted
 	resp = database.GetDB().Save(&order)
 
 	_, err := session.ChannelMessageSendComplex(order.SourceChannel, &discordgo.MessageSend{
