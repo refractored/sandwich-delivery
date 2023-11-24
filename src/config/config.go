@@ -13,6 +13,7 @@ type Config struct {
 	Owners  []string `json:"owners"`
 	GuildID string   `json:"guildID"`
 
+	KitchenChannelID string `json:"KitchenChannelID"`
 	StartupChannelID string `json:"startupChannelID"`
 
 	Database struct {

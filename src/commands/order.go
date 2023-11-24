@@ -176,6 +176,6 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 			},
 		},
 	}
-	kitchenID := config.GetConfig().KitchenID
+	kitchenID := config.GetConfig().KitchenChannelID
 	session.ChannelMessageSendEmbed(kitchenID, kitchenNotifyEmbed)
 }
