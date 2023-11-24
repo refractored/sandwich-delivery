@@ -3,7 +3,7 @@
     "owners": ["you", "and", "your", "friends"],
     "guildID": "some numbers",
 
-    "kitchenid": "some numbers",
+    "kitchenChannelID": "some numbers",
 
     "database": {
         "host": "127.0.0.1",
