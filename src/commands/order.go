@@ -152,9 +152,10 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 			},
 		},
 	})
-	unixCurrentTime := time.Now().Unix()
-	unixTimeString := fmt.Sprintf("%d", unixCurrentTime)
-	kitchenNotifyEmbed := &discordgo.MessageEmbed{
+
+	unixTimeString := fmt.Sprintf("%d", time.Now().Unix())
+
+	session.ChannelMessageSendEmbed(config.GetConfig().KitchenChannelID, &discordgo.MessageEmbed{
 		Title: "Order Created!",
 		Description: fmt.Sprintf("Order ID: %d", order.ID) +
 			"\nOrdered at: <t:" + unixTimeString + ":f>" +
@@ -175,7 +176,5 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 				Inline: false,
 			},
 		},
-	}
-	kitchenID := config.GetConfig().KitchenChannelID
-	session.ChannelMessageSendEmbed(kitchenID, kitchenNotifyEmbed)
+	})
 }
