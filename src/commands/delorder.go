@@ -65,7 +65,7 @@ func (c DelOrderCommand) execute(session *discordgo.Session, event *discordgo.In
 		})
 		return
 	}
-	resp = database.GetDB().Delete(order)
+	resp = database.GetDB().Delete(&order)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

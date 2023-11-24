@@ -22,8 +22,18 @@ func main() {
 	log.Println("Loading Config...")
 	cfg, err := config.LoadConfig(configPath)
 
+	log.Println("Verifying Config...")
+	success, err := config.VerifyConfig(cfg)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	if !success {
+		log.Fatal("Config verification failed!")
+	}
+
 	log.Println("Initializing Database...")
-	database.Init(cfg)
+	database.Init()
 
 	log.Println("Opening Session on Discord...")
 	sess, err := discordgo.New("Bot " + cfg.Token)
@@ -45,10 +55,11 @@ func main() {
 		commands.HandleCommand(session, event)
 	})
 
-	startupTime := time.Since(startTime)
-	startupMessage := fmt.Sprintf("Bot started! (%[1]s)", startupTime)
 	sess.UpdateGameStatus(0, "Bot started!")
-	sess.ChannelMessageSend("1171665367454716016", startupMessage)
+	_, err = sess.ChannelMessageSend(config.GetConfig().StartupChannelID, fmt.Sprintf("Bot started! (%[1]s)", time.Since(startTime)))
+	if err != nil && config.GetConfig().StartupChannelID != "" {
+		log.Println("Error sending startup message:", err)
+	}
 
 	go func() {
 		updateStatusPeriodically(sess, database.GetDB())
@@ -58,7 +69,10 @@ func main() {
 
 	defer func() {
 		log.Println("Bot is shutting down...")
-		sess.ChannelMessageSend("1171665367454716016", "Shutting down...")
+		_, err := sess.ChannelMessageSend(config.GetConfig().StartupChannelID, "Shutting down...")
+		if err != nil && config.GetConfig().StartupChannelID != "" {
+			log.Println("Error sending shutdown message:", err)
+		}
 		sess.Close()
 	}()
 

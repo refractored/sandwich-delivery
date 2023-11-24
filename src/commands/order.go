@@ -85,7 +85,7 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 
 	resp = database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
 
-	if user.Credits < 1 {
+	if user.Credits < *config.GetConfig().TokensPerOrder {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -110,7 +110,7 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 		return
 	}
 
-	user.Credits = user.Credits - 1
+	user.Credits = user.Credits - *config.GetConfig().TokensPerOrder
 	user.OrdersCreated = user.OrdersCreated + 1
 	database.GetDB().Save(&user)
 
