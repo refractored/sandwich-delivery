@@ -65,7 +65,7 @@ The config file is located in the working directory and is called `config.json`.
 | `database.database`     | `string`                      | The database name                                                                                                  | No, unless `database.URL` is set, then it must be empty.  |
 | `database.extraOptions` | `map` of `string` -> `string` | Extra options to pass to the database connection                                                                   | Yes, unless `database.URL` is set, then it must be empty. |
 | `database.URL`          | `string`                      | The database URL/DSN. A reference can be found [here](https://github.com/go-sql-driver/mysql#dsn-data-source-name) | Yes, unless other database entries are not set.           |
-| `tokensPerOrder`        | `int`                         | The amount of tokens a user gets per order. Must be > 0 and defaults to 1.                                         | Yes                                                       |
+| `tokensPerOrder`        | `int`                         | The amount of tokens an order costs. Must be > 0 and defaults to 1.                                                | Yes                                                       |
 | `dailyTokens`           | `int`                         | The amount of tokens a user gets per day. Must be > 0 and defaults to 1.                                           | Yes                                                       |
 
 ### !! Warning !!
