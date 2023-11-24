@@ -22,11 +22,14 @@ func (c SetPermissionLevelCommand) getCommandData() *discordgo.ApplicationComman
 				Type:        discordgo.ApplicationCommandOptionUser,
 				Name:        "user",
 				Description: "The user to set the permission level of.",
+				Required:    true,
+
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "level",
 				Description: "The permission level to set the user to.",
+				Required:    true,
 				Choices: []*discordgo.ApplicationCommandOptionChoice{
 					{
 						Name:  "User",
