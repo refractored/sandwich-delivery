@@ -113,6 +113,43 @@ func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordg
 	}
 	// TODO: Check if the order was placed inside the one set in the config
 	invite, err := session.ChannelInviteCreate(order.SourceChannel, discordgo.Invite{MaxUses: 1})
+	if err != nil {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Could not create invite! Order Deleted.",
+			},
+		})
+		dmMessage, _ := session.UserChannelCreate(order.UserID)
+		session.ChannelMessageSendComplex(dmMessage.ID, &discordgo.MessageSend{
+			Content: "<@" + order.UserID + ">",
+			Embed: &discordgo.MessageEmbed{
+				Title: "Order Error!",
+				Description: "Your order could not be completed!" + "\n" +
+					"The bot was unable to make a invite for the channel you ordered from so it was deleted!",
+				Color: 0xff2c2c,
+				Footer: &discordgo.MessageEmbedFooter{
+					Text:    "Prepare Command ran by " + DisplayName(event),
+					IconURL: GetUser(event).AvatarURL("256"),
+				},
+				Author: &discordgo.MessageEmbedAuthor{
+					Name:    "Sandwich Delivery",
+					IconURL: session.State.User.AvatarURL("256"),
+				},
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:   "Order:",
+						Value:  order.OrderDescription,
+						Inline: false,
+					},
+				},
+			},
+		})
+		order.Status = models.StatusError
+		database.GetDB().Save(&order)
+		database.GetDB().Delete(&order)
+		return
+	}
 	dmMessage, _ := session.UserChannelCreate(order.UserID)
 	_, err = session.ChannelMessageSendComplex(dmMessage.ID, &discordgo.MessageSend{
 		Content: "<@" + order.UserID + ">" + " https://discord.gg/" + invite.Code,
