@@ -8,68 +8,44 @@ import (
 	"time"
 )
 
-type AcceptOrderCommand struct{}
+type PrepareOrderCommand struct{}
 
-func (c AcceptOrderCommand) getName() string {
-	return "acceptorder"
+func (c PrepareOrderCommand) getName() string {
+	return "prepareorder"
 }
 
-func (c AcceptOrderCommand) getCommandData() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{
-		Name:        c.getName(),
-		Description: "Accepts orders.",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionInteger,
-				Name:        "id",
-				Description: "The ID of the order to accept.",
-				Required:    true,
-			},
-		},
-	}
+func (c PrepareOrderCommand) getCommandData() *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Prepares the invite for the order so you can send it to the customer."}
 }
 
-func (c AcceptOrderCommand) registerGuild() string {
+func (c PrepareOrderCommand) registerGuild() string {
 	return config.GetConfig().GuildID
 
 }
 
-func (c AcceptOrderCommand) permissionLevel() models.UserPermissionLevel {
+func (c PrepareOrderCommand) permissionLevel() models.UserPermissionLevel {
 	return models.PermissionLevelArtist
 }
 
-func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-	orderID := models.UserPermissionLevel(event.ApplicationCommandData().Options[0].IntValue())
-
+func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var order models.Order
 	resp := database.GetDB().First(&order, "assignee = ?", GetUser(event).ID)
-
-	if resp.RowsAffected != 0 {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "You can only accept one order at a time!",
-			},
-		})
-		return
-	}
-
-	resp = database.GetDB().First(&order, "id = ?", orderID)
 
 	if resp.RowsAffected == 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "Order not found.",
+				Content: "You dont have an order to prepare!",
 			},
 		})
 		return
 	}
-	if order.Status != models.StatusWaiting {
+
+	if order.Status != models.StatusAccepted {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "This order can no longer be accepted!",
+				Content: "You can only prepare orders that you already accepted!",
 			},
 		})
 		return
@@ -77,12 +53,12 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 	_, err := session.ChannelMessageSendComplex(order.SourceChannel, &discordgo.MessageSend{
 		Content: "<@" + order.UserID + ">",
 		Embed: &discordgo.MessageEmbed{
-			Title: "Order Accepted!",
-			Description: "Your order has been accepted!" + "\n" +
-				"It's currently being prepared and will out for delivery soon!",
+			Title: "Order Out for Delivery!",
+			Description: "Your order is ready and should arrive shortly!" + "\n" +
+				"Dont forget you can tip!",
 			Color: 0x00ff00,
 			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Order Accepted by " + DisplayName(event),
+				Text:    "Order being delivered by " + DisplayName(event),
 				IconURL: GetUser(event).AvatarURL("256"),
 			},
 			Author: &discordgo.MessageEmbedAuthor{
@@ -114,7 +90,7 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 					"The bot was unable to send a message into the channel you ordered from so it was deleted!",
 				Color: 0xff2c2c,
 				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Accept Command ran by " + DisplayName(event),
+					Text:    "Prepare Command ran by " + DisplayName(event),
 					IconURL: GetUser(event).AvatarURL("256"),
 				},
 				Author: &discordgo.MessageEmbedAuthor{
@@ -135,17 +111,51 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 		database.GetDB().Delete(&order)
 		return
 	}
-
-	order.Assignee = GetUser(event).ID
+	// TODO: Check if the order was placed inside the one set in the config
+	invite, err := session.ChannelInviteCreate(order.SourceChannel, discordgo.Invite{MaxUses: 1})
+	dmMessage, _ := session.UserChannelCreate(order.UserID)
+	_, err = session.ChannelMessageSendComplex(dmMessage.ID, &discordgo.MessageSend{
+		Content: "<@" + order.UserID + ">" + " https://discord.gg/" + invite.Code,
+		Embed: &discordgo.MessageEmbed{
+			Title: "Ding ding!",
+			Description: "https://discord.gg/" + invite.Code + "\n" +
+				"The customer awaits their order",
+			Color: 0x00ff00,
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    "Prepare Command ran by " + DisplayName(event),
+				IconURL: GetUser(event).AvatarURL("256"),
+			},
+			Author: &discordgo.MessageEmbedAuthor{
+				Name:    "Sandwich Delivery",
+				IconURL: session.State.User.AvatarURL("256"),
+			},
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:   "Order:",
+					Value:  order.OrderDescription,
+					Inline: false,
+				},
+			},
+		},
+	})
+	if err != nil {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Please make sure DMs are enabled!",
+			},
+		})
+		return
+	}
 	var time = time.Now()
-	order.AcceptedAt = &time
-	order.Status = models.StatusAccepted
+	order.InTransitAt = &time
+	order.Status = models.StatusInTransit
 	resp = database.GetDB().Save(&order)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Order accepted!",
+			Content: "Check your DMs!",
 		},
 	})
 }

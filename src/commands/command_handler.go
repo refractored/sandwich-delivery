@@ -18,6 +18,7 @@ var commands = map[string]Command{
 	SetPermissionLevelCommand{}.getName(): SetPermissionLevelCommand{},
 	DailyCommand{}.getName():              DailyCommand{},
 	AcceptOrderCommand{}.getName():        AcceptOrderCommand{},
+	PrepareOrderCommand{}.getName():       PrepareOrderCommand{},
 }
 
 func RegisterCommands(session *discordgo.Session) {
