@@ -57,7 +57,7 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	var order models.Order
 	var user models.User
 
-	resp := database.GetDB().First(&order, "user_id = ? AND delivered = ?", GetUser(event).ID, false)
+	resp := database.GetDB().First(&order, "user_id = ? AND status < ?", GetUser(event).ID, models.StatusDelivered)
 	if resp.RowsAffected > 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

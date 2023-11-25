@@ -42,8 +42,19 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 	orderID := models.UserPermissionLevel(event.ApplicationCommandData().Options[0].IntValue())
 
 	var order models.Order
+	resp := database.GetDB().First(&order, "assignee = ?", GetUser(event).ID)
 
-	resp := database.GetDB().First(&order, "id = ?", orderID)
+	if resp.RowsAffected != 0 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "You can only accept one order at a time!",
+			},
+		})
+		return
+	}
+
+	resp = database.GetDB().First(&order, "id = ?", orderID)
 
 	if resp.RowsAffected == 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
@@ -126,7 +137,8 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 	}
 
 	order.Assignee = GetUser(event).ID
-	order.AcceptedAt = time.Now()
+	var time = time.Now()
+	order.AcceptedAt = &time
 	order.Status = models.StatusAccepted
 	resp = database.GetDB().Save(&order)
 
