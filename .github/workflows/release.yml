@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - dev
     tags:
       - v/*
 
@@ -47,6 +46,7 @@ jobs:
           uses: actions/upload-artifact@v3
           with:
             name: sandwich-delivery-windows-amd64.exe
+            path: ./build/sandwich-delivery-windows-amd64.exe
 
     publish:
       needs: [build-linux, build-windows]
