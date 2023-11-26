@@ -12,6 +12,7 @@ type Order struct {
 	SourceServer     string
 	SourceChannel    string
 	Assignee         string
+	Tipped           bool
 	Status           DeliveryStatus
 	CreatedAt        time.Time  `gorm:"<-:create type:datetime"`
 	AcceptedAt       *time.Time `gorm:"type:datetime"`

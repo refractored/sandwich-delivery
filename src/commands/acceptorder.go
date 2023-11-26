@@ -5,6 +5,7 @@ import (
 	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
+	"strconv"
 	"time"
 )
 
@@ -42,7 +43,7 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 	orderID := models.UserPermissionLevel(event.ApplicationCommandData().Options[0].IntValue())
 
 	var order models.Order
-	resp := database.GetDB().First(&order, "assignee = ?", GetUser(event).ID)
+	resp := database.GetDB().First(&order, "assignee = ? AND status < ?", GetUser(event).ID, models.StatusDelivered)
 
 	if resp.RowsAffected != 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
@@ -95,6 +96,11 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 					Value:  order.OrderDescription,
 					Inline: false,
 				},
+				{
+					Name:   "ID:",
+					Value:  strconv.Itoa(int(order.ID)),
+					Inline: false,
+				},
 			},
 		},
 	})
@@ -132,7 +138,6 @@ func (c AcceptOrderCommand) execute(session *discordgo.Session, event *discordgo
 		})
 		order.Status = models.StatusError
 		database.GetDB().Save(&order)
-		database.GetDB().Delete(&order)
 		return
 	}
 

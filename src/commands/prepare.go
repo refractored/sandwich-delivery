@@ -5,6 +5,7 @@ import (
 	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
+	"strconv"
 	"time"
 )
 
@@ -29,7 +30,7 @@ func (c PrepareOrderCommand) permissionLevel() models.UserPermissionLevel {
 
 func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var order models.Order
-	resp := database.GetDB().First(&order, "assignee = ?", GetUser(event).ID)
+	resp := database.GetDB().First(&order, "assignee = ? AND status < ?", GetUser(event).ID, models.StatusDelivered)
 
 	if resp.RowsAffected == 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
@@ -71,6 +72,11 @@ func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordg
 					Value:  order.OrderDescription,
 					Inline: false,
 				},
+				{
+					Name:   "ID:",
+					Value:  strconv.Itoa(int(order.ID)),
+					Inline: false,
+				},
 			},
 		},
 	})
@@ -108,10 +114,9 @@ func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordg
 		})
 		order.Status = models.StatusError
 		database.GetDB().Save(&order)
-		database.GetDB().Delete(&order)
 		return
 	}
-	// TODO: Check if the order was placed inside the one set in the config
+	// TODO: Check if the order was placed inside channel set in the config
 	invite, err := session.ChannelInviteCreate(order.SourceChannel, discordgo.Invite{MaxUses: 1})
 	if err != nil {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
@@ -142,15 +147,19 @@ func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordg
 						Value:  order.OrderDescription,
 						Inline: false,
 					},
+					{
+						Name:   "ID:",
+						Value:  strconv.Itoa(int(order.ID)),
+						Inline: false,
+					},
 				},
 			},
 		})
 		order.Status = models.StatusError
 		database.GetDB().Save(&order)
-		database.GetDB().Delete(&order)
 		return
 	}
-	dmMessage, _ := session.UserChannelCreate(order.UserID)
+	dmMessage, _ := session.UserChannelCreate(GetUser(event).ID)
 	_, err = session.ChannelMessageSendComplex(dmMessage.ID, &discordgo.MessageSend{
 		Content: "<@" + order.UserID + ">" + " https://discord.gg/" + invite.Code,
 		Embed: &discordgo.MessageEmbed{

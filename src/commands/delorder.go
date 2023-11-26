@@ -6,27 +6,27 @@ import (
 	"sandwich-delivery/src/models"
 )
 
-type DelOrderCommand struct{}
+type CancelOrder struct{}
 
-func (c DelOrderCommand) getName() string {
-	return "delorder"
+func (c CancelOrder) getName() string {
+	return "cancelorder"
 }
 
-func (c DelOrderCommand) getCommandData() *discordgo.ApplicationCommand {
+func (c CancelOrder) getCommandData() *discordgo.ApplicationCommand {
 	DMPermission := new(bool)
 	*DMPermission = false
 	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Deletes your pending order.", DMPermission: DMPermission}
 }
 
-func (c DelOrderCommand) registerGuild() string {
+func (c CancelOrder) registerGuild() string {
 	return ""
 }
 
-func (c DelOrderCommand) permissionLevel() models.UserPermissionLevel {
+func (c CancelOrder) permissionLevel() models.UserPermissionLevel {
 	return models.PermissionLevelUser
 }
 
-func (c DelOrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+func (c CancelOrder) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	if InteractionIsDM(event) {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
