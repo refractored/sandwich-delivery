@@ -122,7 +122,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "tipped!",
+			Content: "Tipped!",
 		},
 	})
 }
