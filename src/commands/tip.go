@@ -13,7 +13,26 @@ func (c TipCommand) getName() string {
 }
 
 func (c TipCommand) getCommandData() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Tips your last order"}
+	var minvalue float64 = 1
+	return &discordgo.ApplicationCommand{
+		Name:        c.getName(),
+		Description: "Tips your last order",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "amount",
+				Description: "Amount to tip",
+				Required:    true,
+				MinValue:    &minvalue,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "id",
+				Description: "Order ID",
+				Required:    false,
+			},
+		},
+	}
 }
 
 func (c TipCommand) registerGuild() string {
@@ -25,18 +44,45 @@ func (c TipCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c TipCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	amount := uint32(event.ApplicationCommandData().Options[0].IntValue())
+	var id uint64
 	var order models.Order
 	var customer models.User
 	var employee models.User
-	resp := database.GetDB().Last(&order, "user_id = ?", GetUser(event).ID)
-	if resp.RowsAffected == 0 {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "You've never ordered anything before!",
-			},
-		})
-		return
+
+	if len(event.ApplicationCommandData().Options) == 1 {
+		resp := database.GetDB().Last(&order, "user_id = ?", GetUser(event).ID)
+		if resp.RowsAffected == 0 {
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "You've never ordered anything before!",
+				},
+			})
+			return
+		}
+	} else {
+		id = uint64(event.ApplicationCommandData().Options[1].IntValue())
+		resp := database.GetDB().Last(&order, "id = ?", id)
+		if resp.RowsAffected == 0 {
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "This order does not exist!",
+				},
+			})
+			return
+		}
+		if order.UserID != GetUser(event).ID {
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "You can only tip your own orders!",
+				},
+			})
+			return
+		}
+
 	}
 	if order.Status != models.StatusDelivered {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
@@ -56,9 +102,9 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 		})
 		return
 	}
-	resp = database.GetDB().First(&customer, "user_id = ?", GetUser(event).ID)
-	resp = database.GetDB().First(&employee, "user_id = ?", order.Assignee)
-	if customer.Credits < 1 {
+	database.GetDB().First(&customer, "user_id = ?", GetUser(event).ID)
+	database.GetDB().First(&employee, "user_id = ?", order.Assignee)
+	if customer.Credits < amount {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -67,8 +113,8 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 		})
 		return
 	}
-	customer.Credits = customer.Credits - 1
-	employee.Credits = employee.Credits + 1
+	customer.Credits = customer.Credits - amount
+	employee.Credits = employee.Credits + amount
 	order.Tipped = true
 	database.GetDB().Save(&order)
 	database.GetDB().Save(&customer)
