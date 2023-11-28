@@ -117,7 +117,7 @@ func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordg
 		return
 	}
 	// TODO: Check if the order was placed inside channel set in the config
-	invite, err := session.ChannelInviteCreate(order.SourceChannel, discordgo.Invite{MaxUses: 1})
+	invite, err := session.ChannelInviteCreate(order.SourceChannel, discordgo.Invite{MaxUses: 1, Temporary: true, Unique: true, MaxAge: 300})
 	if err != nil {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
