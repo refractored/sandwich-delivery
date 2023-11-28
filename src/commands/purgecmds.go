@@ -26,7 +26,6 @@ func (c PurgeCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c PurgeCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
