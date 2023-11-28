@@ -16,7 +16,7 @@ func (c PrepareOrderCommand) getName() string {
 }
 
 func (c PrepareOrderCommand) getCommandData() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Prepares the invite for the order so you can send it to the customer."}
+	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Marks the order as out for delivery and sends you an invite to the server."}
 }
 
 func (c PrepareOrderCommand) registerGuild() string {
