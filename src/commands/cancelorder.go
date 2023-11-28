@@ -67,7 +67,6 @@ func (c CancelOrder) execute(session *discordgo.Session, event *discordgo.Intera
 	}
 	order.Status = models.StatusCancelled
 	database.GetDB().Save(&order)
-	database.GetDB().Delete(&order)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
