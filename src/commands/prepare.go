@@ -36,7 +36,7 @@ func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordg
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "You dont have an order to prepare!",
+				Content: "You don't have an order to prepare!",
 			},
 		})
 		return
@@ -56,7 +56,7 @@ func (c PrepareOrderCommand) execute(session *discordgo.Session, event *discordg
 		Embed: &discordgo.MessageEmbed{
 			Title: "Order Out for Delivery!",
 			Description: "Your order is ready and should arrive shortly!" + "\n" +
-				"Dont forget you can tip!",
+				"Don't forget you can tip!",
 			Color: 0x00ff00,
 			Footer: &discordgo.MessageEmbedFooter{
 				Text:    "Order being delivered by " + DisplayName(event),
