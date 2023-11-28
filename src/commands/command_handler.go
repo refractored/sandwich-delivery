@@ -10,13 +10,18 @@ import (
 var commands = map[string]Command{
 	CoinflipCommand{}.getName():           CoinflipCommand{},
 	OrderCommand{}.getName():              OrderCommand{},
-	DelOrderCommand{}.getName():           DelOrderCommand{},
+	CancelOrder{}.getName():               CancelOrder{},
 	PingCommand{}.getName():               PingCommand{},
 	ShutdownCommand{}.getName():           ShutdownCommand{},
 	BlacklistCommand{}.getName():          BlacklistCommand{},
 	UnblacklistCommand{}.getName():        UnblacklistCommand{},
 	SetPermissionLevelCommand{}.getName(): SetPermissionLevelCommand{},
 	DailyCommand{}.getName():              DailyCommand{},
+	AcceptOrderCommand{}.getName():        AcceptOrderCommand{},
+	PrepareOrderCommand{}.getName():       PrepareOrderCommand{},
+	TipCommand{}.getName():                TipCommand{},
+	DeliverCommand{}.getName():            DeliverCommand{},
+	PurgeCommand{}.getName():              PurgeCommand{},
 }
 
 func RegisterCommands(session *discordgo.Session) {

@@ -13,6 +13,7 @@ type Config struct {
 	Owners  []string `json:"owners"`
 	GuildID string   `json:"guildID"`
 
+	KitchenChannelID string `json:"kitchenChannelID"`
 	StartupChannelID string `json:"startupChannelID"`
 
 	Database struct {
@@ -73,6 +74,10 @@ func VerifyConfig(config *Config) (bool, error) {
 
 	if config.GuildID == "" {
 		return false, &Error{"guildID is not set"}
+	}
+
+	if config.KitchenChannelID == "" {
+		return false, &Error{"kitchenChannelID is not set"}
 	}
 
 	if config.Database.Host == "" && config.Database.URL == "" {

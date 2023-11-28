@@ -11,8 +11,24 @@ type Order struct {
 	OrderDescription string
 	SourceServer     string
 	SourceChannel    string
-	Delivered        bool
-	CreatedAt        time.Time `gorm:"<-:create type:datetime"`
-	DeliveredAt      time.Time `gorm:"type:datetime"`
-	DeletedAt        gorm.DeletedAt
+	Assignee         string
+	Tipped           bool
+	Status           DeliveryStatus
+	CreatedAt        time.Time  `gorm:"<-:create type:datetime"`
+	AcceptedAt       *time.Time `gorm:"type:datetime"`
+	InTransitAt      *time.Time `gorm:"type:datetime"`
+	DeliveredAt      *time.Time `gorm:"type:datetime"`
+	DeletedAt        *gorm.DeletedAt
 }
+
+type DeliveryStatus uint8
+
+const (
+	StatusWaiting   DeliveryStatus = 0 // Waiting to be accepted by a Sandwich Artist
+	StatusAccepted  DeliveryStatus = 1 // Accepted by Sandwich Artist
+	StatusInTransit DeliveryStatus = 2 // Invite sent to Sandwich Artist
+	StatusDelivered DeliveryStatus = 3 // Sandwich Artist has marked as delivered
+	StatusCancelled DeliveryStatus = 4 // Cancelled by user
+	StatusModerated DeliveryStatus = 5 // Cancelled by staff
+	StatusError     DeliveryStatus = 6 // Cancelled due to error (e.g. invalid location)
+)

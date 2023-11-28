@@ -1,10 +1,12 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
+	"time"
 )
 
 type OrderCommand struct{}
@@ -55,8 +57,9 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	var order models.Order
 	var user models.User
 
-	resp := database.GetDB().First(&order, "user_id = ? AND delivered = ?", GetUser(event).ID, false)
-	if resp.RowsAffected > 0 {
+	resp := database.GetDB().First(&order, "user_id = ? AND status < ?", GetUser(event).ID, models.StatusDelivered)
+
+	if resp.RowsAffected != 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -115,9 +118,9 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	order = models.Order{
 		UserID:           GetUser(event).ID,
 		OrderDescription: orderOption,
-		Delivered:        false,
+		Status:           models.StatusWaiting,
 		SourceServer:     event.GuildID,
-		SourceChannel:    event.GuildID,
+		SourceChannel:    event.ChannelID,
 	}
 
 	resp = database.GetDB().Save(&order)
@@ -147,6 +150,31 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 						},
 					},
 				},
+			},
+		},
+	})
+
+	unixTimeString := fmt.Sprintf("%d", time.Now().Unix())
+
+	session.ChannelMessageSendEmbed(config.GetConfig().KitchenChannelID, &discordgo.MessageEmbed{
+		Title: "Order Created!",
+		Description: fmt.Sprintf("Order ID: %d", order.ID) +
+			"\nOrdered at: <t:" + unixTimeString + ":f>" +
+			"\nPlaced: <t:" + unixTimeString + ":R>",
+		Color: 0x00ff00,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text:    "Order Created by " + DisplayName(event),
+			IconURL: GetUser(event).AvatarURL("256"),
+		},
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    "Sandwich Delivery",
+			IconURL: session.State.User.AvatarURL("256"),
+		},
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Order:",
+				Value:  orderOption,
+				Inline: false,
 			},
 		},
 	})

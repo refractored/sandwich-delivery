@@ -10,6 +10,7 @@ import (
 	"sandwich-delivery/src/commands"
 	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/database"
+	"sandwich-delivery/src/models"
 	"strconv"
 	"syscall"
 	"time"
@@ -82,24 +83,22 @@ func main() {
 }
 
 func updateStatusPeriodically(s *discordgo.Session, db *gorm.DB) {
-	updateInterval := 2 * time.Minute
-	ticker := time.NewTicker(updateInterval)
+	var updateInterval = 2 * time.Minute
 
 	for {
-		select {
-		case <-ticker.C:
-			var orderCount int64
-			result := db.Table("orders").Count(&orderCount)
-			if result.Error != nil {
-				log.Println("Error counting orders:", result.Error)
-				continue
-			}
+		var orderCount int64
 
-			orderCountString := strconv.Itoa(int(orderCount))
-
-			s.UpdateGameStatus(0, "Orders: "+orderCountString)
-
-			log.Println("Bot status updated. Orders:", orderCount)
+		result := db.Model(&models.Order{}).Where("status < ?", models.StatusDelivered).Count(&orderCount)
+		if result.Error != nil {
+			log.Println("Error counting orders:", result.Error)
+			continue
 		}
+		orderCountString := strconv.Itoa(int(orderCount))
+
+		s.UpdateGameStatus(0, "Orders: "+orderCountString)
+
+		log.Println("Bot status updated. Orders:", orderCount)
+		time.Sleep(updateInterval)
 	}
+
 }
