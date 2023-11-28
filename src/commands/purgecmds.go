@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/bwmarrin/discordgo"
 	"os"
+	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/models"
 )
 
@@ -17,7 +18,7 @@ func (c PurgeCommand) getCommandData() *discordgo.ApplicationCommand {
 }
 
 func (c PurgeCommand) registerGuild() string {
-	return ""
+	return config.GetConfig().GuildID
 }
 
 func (c PurgeCommand) permissionLevel() models.UserPermissionLevel {
