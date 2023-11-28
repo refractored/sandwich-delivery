@@ -34,7 +34,7 @@ func (c DeliverCommand) execute(session *discordgo.Session, event *discordgo.Int
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "You dont have an order to mark as delivered!",
+				Content: "You don't have an order to mark as delivered!",
 			},
 		})
 		return
@@ -44,7 +44,7 @@ func (c DeliverCommand) execute(session *discordgo.Session, event *discordgo.Int
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "You can only mark orders as delivered that are in transit!",
+				Content: "You can only mark orders as delivered if they are in transit!",
 			},
 		})
 		return
