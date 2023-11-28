@@ -18,7 +18,7 @@ func (c AcceptOrderCommand) getName() string {
 func (c AcceptOrderCommand) getCommandData() *discordgo.ApplicationCommand {
 	return &discordgo.ApplicationCommand{
 		Name:        c.getName(),
-		Description: "Accepts orders.",
+		Description: "Accepts the order and assigns it to you.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
