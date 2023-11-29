@@ -2,7 +2,6 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"log"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
 )
@@ -15,7 +14,7 @@ func (c UserManageCommand) getName() string {
 
 func (c UserManageCommand) getCommandData() *discordgo.ApplicationCommand {
 	return &discordgo.ApplicationCommand{Name: c.getName(),
-		Description: "Flip a virtual coin.",
+		Description: "Manage data of an user.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Name:        "resetdaily",
@@ -122,17 +121,16 @@ func (c UserManageCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-	options := event.ApplicationCommandData().Options
 	var user models.User
 
-	log.Println(event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
+	options := event.ApplicationCommandData().Options
+	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
 
 	switch options[0].Name {
 	case "resetdaily":
 		resp := database.GetDB().First(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
 		if resp.RowsAffected == 0 {
 			user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
-
 			database.GetDB().Save(&user)
 		}
 		user.DailyClaimedAt = nil
@@ -144,10 +142,35 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 			},
 		})
 	case "modify":
+		resp := database.GetDB().First(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
+		if resp.RowsAffected == 0 {
+			user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
+
+			database.GetDB().Save(&user)
+		}
+		if option, ok := optionMap["blacklisted"]; ok {
+			user.IsBlacklisted = option.BoolValue()
+		}
+		if option, ok := optionMap["credits"]; ok {
+			user.Credits = uint32(option.IntValue())
+		}
+		if option, ok := optionMap["permissionlevel"]; ok {
+			user.PermissionLevel = models.UserPermissionLevel(option.IntValue())
+		}
+		if len(optionMap) == 1 {
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "No options provided.",
+				},
+			})
+			return
+		}
+		database.GetDB().Save(&user)
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "modify",
+				Content: "Modified Data of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
 			},
 		})
 	case "purge":
@@ -164,12 +187,5 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 				Content: "view",
 			},
 		})
-		//switch options[0].Name {
-		//case "nested-subcommand":
-		//	content = "Nice, now you know how to execute nested commands too"
-		//default:
-		//	content = "Oops, something went wrong.\n" +
-		//		"Hol' up, you aren't supposed to see this message."
-		//}
 	}
 }
