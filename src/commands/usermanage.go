@@ -140,7 +140,7 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "it should've worked or smthing",
+				Content: "Reset daily of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
 			},
 		})
 	case "modify":
