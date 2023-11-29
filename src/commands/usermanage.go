@@ -125,7 +125,9 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 
 	options := event.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
-
+	for _, opt := range options[0].Options {
+		optionMap[opt.Name] = opt
+	}
 	switch options[0].Name {
 	case "resetdaily":
 		resp := database.GetDB().First(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
@@ -141,6 +143,7 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 				Content: "Reset daily of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
 			},
 		})
+		break
 	case "modify":
 		resp := database.GetDB().First(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
 		if resp.RowsAffected == 0 {
@@ -151,13 +154,13 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 		if option, ok := optionMap["blacklisted"]; ok {
 			user.IsBlacklisted = option.BoolValue()
 		}
-		if option, ok := optionMap["credits"]; ok {
+		if option, ok := optionMap["blacklisted"]; ok {
 			user.Credits = uint32(option.IntValue())
 		}
 		if option, ok := optionMap["permissionlevel"]; ok {
 			user.PermissionLevel = models.UserPermissionLevel(option.IntValue())
 		}
-		if len(optionMap) == 1 {
+		if len(optionMap) == 0 {
 			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -173,6 +176,7 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 				Content: "Modified Data of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
 			},
 		})
+		break
 	case "purge":
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -180,6 +184,7 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 				Content: "purge",
 			},
 		})
+		break
 	case "view":
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -187,5 +192,6 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 				Content: "view",
 			},
 		})
+		break
 	}
 }
