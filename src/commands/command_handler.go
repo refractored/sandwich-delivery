@@ -23,6 +23,7 @@ var commands = map[string]Command{
 	DeliverCommand{}.getName():            DeliverCommand{},
 	PurgeCommand{}.getName():              PurgeCommand{},
 	UserManageCommand{}.getName():         UserManageCommand{},
+	InfoCommand{}.getName():               InfoCommand{},
 }
 
 func RegisterCommands(session *discordgo.Session) {

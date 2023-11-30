@@ -30,19 +30,6 @@ func (c UserManageCommand) getCommandData() *discordgo.ApplicationCommand {
 				Type: discordgo.ApplicationCommandOptionSubCommand,
 			},
 			{
-				Name:        "view",
-				Description: "View the information of a user.",
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Type:        discordgo.ApplicationCommandOptionUser,
-						Name:        "user",
-						Description: "The user to view information of.",
-						Required:    true,
-					},
-				},
-				Type: discordgo.ApplicationCommandOptionSubCommand,
-			},
-			{
 				Name:        "purge",
 				Description: "Purges an user's orders",
 				Options: []*discordgo.ApplicationCommandOption{
@@ -148,7 +135,6 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 		resp := database.GetDB().First(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
 		if resp.RowsAffected == 0 {
 			user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
-
 			database.GetDB().Save(&user)
 		}
 		if option, ok := optionMap["blacklisted"]; ok {
@@ -182,14 +168,6 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "purge",
-			},
-		})
-		break
-	case "view":
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "view",
 			},
 		})
 		break
