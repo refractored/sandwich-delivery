@@ -18,7 +18,7 @@ func (c InfoCommand) getName() string {
 
 func (c InfoCommand) getCommandData() *discordgo.ApplicationCommand {
 	return &discordgo.ApplicationCommand{Name: c.getName(),
-		Description: "Manage data of an user.",
+		Description: "Lookup info of the bot or a user.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Name:        "user",
@@ -27,7 +27,7 @@ func (c InfoCommand) getCommandData() *discordgo.ApplicationCommand {
 					{
 						Type:        discordgo.ApplicationCommandOptionUser,
 						Name:        "user",
-						Description: "The user to reset the daily timer.",
+						Description: "The user to lookup.",
 						Required:    true,
 					},
 				},
@@ -62,16 +62,6 @@ func (c InfoCommand) execute(session *discordgo.Session, event *discordgo.Intera
 		var canceledOrderCount int64
 		var userCount int64
 
-		totalUsers := 0
-
-		for _, guild := range session.State.Guilds {
-			guild, err := session.Guild(guild.ID)
-			if err != nil {
-				fmt.Println("Error fetching guild information:", err)
-				continue
-			}
-			totalUsers += guild.MemberCount
-		}
 		result := database.GetDB().Model(&models.Order{}).Where("status < ?", models.StatusDelivered).Count(&pendingOrderCount)
 		if result.Error != nil {
 			log.Println("Error counting orders:", result.Error)
@@ -96,7 +86,6 @@ func (c InfoCommand) execute(session *discordgo.Session, event *discordgo.Intera
 						Title: "Bot Information",
 						Description: "Bot Name: " + session.State.User.Username + "#" + session.State.User.Discriminator + "\n" +
 							"Guilds: " + strconv.Itoa(len(session.State.Guilds)) + "\n" +
-							"User Guild Count: " + strconv.Itoa(totalUsers) + "\n" +
 							"Pending Orders: " + strconv.Itoa(int(pendingOrderCount)) + "\n" +
 							"Completed Orders: " + strconv.Itoa(int(completedOrderCount)) + "\n" +
 							"Canceled Orders: " + strconv.Itoa(int(canceledOrderCount)) + "\n" +
