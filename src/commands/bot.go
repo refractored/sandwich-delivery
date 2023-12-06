@@ -49,57 +49,64 @@ func (c BotCommand) execute(session *discordgo.Session, event *discordgo.Interac
 	}
 	switch options[0].Name {
 	case "shutdown":
-		var shutdownMessages = []string{
-			"Was it something I did? :( *(Shutting Down)*",
-			"Whatever you say... *(Shutting Down)*",
-			"Whatever. *(Shutting Down)*",
-			"Rude. *(Shutting Down)*",
-			"Fine... I guess... :( *(Shutting Down)*",
-		}
-
-		selection := rand.Intn(len(shutdownMessages))
-
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: shutdownMessages[selection],
-			},
-		})
-
-		session.Close()
-		os.Exit(0)
+		BotShutdown(session, event)
 		break
 	case "purgecmds":
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Give me a minute...",
-			},
-		})
+		BotPurgeCMDS(session, event)
+		break
+	}
+}
+func BotShutdown(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	var shutdownMessages = []string{
+		"Was it something I did? :( *(Shutting Down)*",
+		"Whatever you say... *(Shutting Down)*",
+		"Whatever. *(Shutting Down)*",
+		"Rude. *(Shutting Down)*",
+		"Fine... I guess... :( *(Shutting Down)*",
+	}
 
-		applicationCommands, err := session.ApplicationCommands(session.State.User.ID, "")
+	selection := rand.Intn(len(shutdownMessages))
+
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: shutdownMessages[selection],
+		},
+	})
+
+	session.Close()
+	os.Exit(0)
+}
+
+func BotPurgeCMDS(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Give me a minute...",
+		},
+	})
+
+	applicationCommands, err := session.ApplicationCommands(session.State.User.ID, "")
+	if err != nil {
+		return
+	}
+	for _, applicationCommand := range applicationCommands {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		})
+		session.ApplicationCommandDelete(session.State.User.ID, "", applicationCommand.ID)
+	}
+
+	if InteractionIsDM(event) {
+		applicationCommands, err := session.ApplicationCommands(session.State.User.ID, event.GuildID)
 		if err != nil {
 			return
 		}
 		for _, applicationCommand := range applicationCommands {
-			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-			})
-			session.ApplicationCommandDelete(session.State.User.ID, "", applicationCommand.ID)
+			session.ApplicationCommandDelete(session.State.User.ID, event.GuildID, applicationCommand.ID)
 		}
-
-		if InteractionIsDM(event) {
-			applicationCommands, err := session.ApplicationCommands(session.State.User.ID, event.GuildID)
-			if err != nil {
-				return
-			}
-			for _, applicationCommand := range applicationCommands {
-				session.ApplicationCommandDelete(session.State.User.ID, event.GuildID, applicationCommand.ID)
-			}
-		}
-
-		session.Close()
-		os.Exit(0)
-		break
 	}
+
+	session.Close()
+	os.Exit(0)
 }

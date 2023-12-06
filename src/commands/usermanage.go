@@ -152,80 +152,19 @@ func (c UserManageCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-	var user models.User
-	var executor models.User
 
 	options := event.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
 	for _, opt := range options[0].Options {
 		optionMap[opt.Name] = opt
 	}
+
 	switch options[0].Name {
 	case "resetdaily":
-		resp := database.GetDB().Find(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
-		if resp.RowsAffected == 0 {
-			user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
-			database.GetDB().Save(&user)
-		}
-		user.DailyClaimedAt = nil
-		database.GetDB().Save(&user)
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Reset daily of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
-			},
-		})
+		UserManageResetDaily(session, event)
 		break
 	case "modify":
-		database.GetDB().Find(&executor, "user_id = ?", GetUser(event).ID)
-		resp := database.GetDB().Find(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
-		if executor.PermissionLevel < models.PermissionLevelAdmin {
-			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: "You're lacking the required permissions to modify this user!",
-				},
-			})
-			return
-		}
-		if resp.RowsAffected == 0 {
-			user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
-			database.GetDB().Save(&user)
-		}
-		if option, ok := optionMap["blacklisted"]; ok {
-			user.IsBlacklisted = option.BoolValue()
-		}
-		if option, ok := optionMap["blacklisted"]; ok {
-			user.Credits = uint32(option.IntValue())
-		}
-		if option, ok := optionMap["permissionlevel"]; ok {
-			user.PermissionLevel = models.UserPermissionLevel(option.IntValue())
-			if executor.PermissionLevel < models.UserPermissionLevel(option.IntValue()) {
-				session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Content: "You cannot assign permissions higher than your own!",
-					},
-				})
-				return
-			}
-		}
-		if len(optionMap) == 0 {
-			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: "No options provided.",
-				},
-			})
-			return
-		}
-		database.GetDB().Save(&user)
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Modified Data of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
-			},
-		})
+		UserManageModify(session, event)
 		break
 	case "purge":
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
@@ -236,67 +175,159 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 		})
 		break
 	case "addcredits":
-		var userid string
-		if option, ok := optionMap["user"]; ok {
-			userid = option.UserValue(nil).ID
-		}
-		resp := database.GetDB().Find(&user, "user_id = ?", userid)
-		if resp.RowsAffected == 0 {
-			user.UserID = userid
-			database.GetDB().Save(&user)
-		}
-		if option, ok := optionMap["credits"]; ok {
-			user.Credits += uint32(option.IntValue())
-			if user.Credits < 0 {
-				session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Content: "User cannot have negative credits!",
-					},
-				})
-				return
-			}
-			database.GetDB().Save(&user)
-			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: "Added " + strconv.Itoa(int(option.IntValue())) + " credits to " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username + "\n" +
-						"User now has " + strconv.Itoa(int(user.Credits)) + " credits.",
-				},
-			})
-		}
+		UserManageAddCredits(session, event)
 		break
 	case "takecredits":
-		var userid string
-		if option, ok := optionMap["user"]; ok {
-			userid = option.UserValue(nil).ID
-		}
-		resp := database.GetDB().Find(&user, "user_id = ?", userid)
-		if resp.RowsAffected == 0 {
-			user.UserID = userid
-			database.GetDB().Save(&user)
-		}
-		if option, ok := optionMap["credits"]; ok {
-			if user.Credits < uint32(option.IntValue()) {
-				session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Content: "User cannot have negative credits!",
-					},
-				})
-				return
-			}
-			user.Credits -= uint32(option.IntValue())
-			database.GetDB().Save(&user)
+		UserManageTakeCredits(session, event)
+		break
+
+	}
+}
+
+func UserManageResetDaily(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	var user models.User
+
+	resp := database.GetDB().Find(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
+	if resp.RowsAffected == 0 {
+		user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
+		database.GetDB().Save(&user)
+	}
+	user.DailyClaimedAt = nil
+	database.GetDB().Save(&user)
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Reset daily of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
+		},
+	})
+}
+
+func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	var user models.User
+	var executor models.User
+
+	options := event.ApplicationCommandData().Options
+	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
+
+	database.GetDB().Find(&executor, "user_id = ?", GetUser(event).ID)
+	resp := database.GetDB().Find(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
+	if executor.PermissionLevel < models.PermissionLevelAdmin {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "You're lacking the required permissions to modify this user!",
+			},
+		})
+		return
+	}
+	if resp.RowsAffected == 0 {
+		user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
+		database.GetDB().Save(&user)
+	}
+	if option, ok := optionMap["blacklisted"]; ok {
+		user.IsBlacklisted = option.BoolValue()
+	}
+	if option, ok := optionMap["blacklisted"]; ok {
+		user.Credits = uint32(option.IntValue())
+	}
+	if option, ok := optionMap["permissionlevel"]; ok {
+		user.PermissionLevel = models.UserPermissionLevel(option.IntValue())
+		if executor.PermissionLevel < models.UserPermissionLevel(option.IntValue()) {
 			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "Took " + strconv.Itoa(int(option.IntValue())) + " credits from " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username + "\n" +
-						"User now has " + strconv.Itoa(int(user.Credits)) + " credits.",
+					Content: "You cannot assign permissions higher than your own!",
 				},
 			})
+			return
 		}
-		break
+	}
+	if len(optionMap) == 0 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "No options provided.",
+			},
+		})
+		return
+	}
+	database.GetDB().Save(&user)
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Modified Data of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
+		},
+	})
+}
+func UserManageAddCredits(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	var user models.User
 
+	options := event.ApplicationCommandData().Options
+	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
+
+	var userid string
+	if option, ok := optionMap["user"]; ok {
+		userid = option.UserValue(nil).ID
+	}
+	resp := database.GetDB().Find(&user, "user_id = ?", userid)
+	if resp.RowsAffected == 0 {
+		user.UserID = userid
+		database.GetDB().Save(&user)
+	}
+	if option, ok := optionMap["credits"]; ok {
+		user.Credits += uint32(option.IntValue())
+		if user.Credits < 0 {
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "User cannot have negative credits!",
+				},
+			})
+			return
+		}
+		database.GetDB().Save(&user)
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Added " + strconv.Itoa(int(option.IntValue())) + " credits to " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username + "\n" +
+					"User now has " + strconv.Itoa(int(user.Credits)) + " credits.",
+			},
+		})
+	}
+}
+func UserManageTakeCredits(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	var user models.User
+
+	options := event.ApplicationCommandData().Options
+	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
+
+	var userid string
+	if option, ok := optionMap["user"]; ok {
+		userid = option.UserValue(nil).ID
+	}
+	resp := database.GetDB().Find(&user, "user_id = ?", userid)
+	if resp.RowsAffected == 0 {
+		user.UserID = userid
+		database.GetDB().Save(&user)
+	}
+	if option, ok := optionMap["credits"]; ok {
+		if user.Credits < uint32(option.IntValue()) {
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "User cannot have negative credits!",
+				},
+			})
+			return
+		}
+		user.Credits -= uint32(option.IntValue())
+		database.GetDB().Save(&user)
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Took " + strconv.Itoa(int(option.IntValue())) + " credits from " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username + "\n" +
+					"User now has " + strconv.Itoa(int(user.Credits)) + " credits.",
+			},
+		})
 	}
 }

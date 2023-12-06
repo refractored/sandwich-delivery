@@ -75,48 +75,46 @@ func (c BlacklistCommand) execute(session *discordgo.Session, event *discordgo.I
 	switch options[0].Name {
 
 	case "add":
-		userOption := event.ApplicationCommandData().Options[0].Options[0].UserValue(session)
-
-		var user models.User
-
-		database.GetDB().Find(&user, "user_id = ?", userOption.ID)
-
-		user.IsBlacklisted = true
-		database.GetDB().Save(&user)
-
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "User blacklisted successfully.",
-			},
-		})
+		BlacklistAdd(session, event)
 		break
 	case "remove":
-		userOption := event.ApplicationCommandData().Options[0].Options[0].UserValue(session)
-
-		var user models.User
-
-		resp := database.GetDB().Find(&user, "user_id = ?", userOption.ID)
-		if resp.RowsAffected == 0 || user.IsBlacklisted == false {
-			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					// todo https://github.com/refractored/sandwich-delivery/issues/5
-					Content: "User is not blacklisted.",
-				},
-			})
-			return
-		}
-
-		user.IsBlacklisted = false
-		database.GetDB().Save(&user)
-
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "User unblacklisted successfully.",
-			},
-		})
+		BlacklistRemove(session, event)
 		break
 	}
+}
+
+func BlacklistAdd(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	userOption := event.ApplicationCommandData().Options[0].Options[0].UserValue(session)
+
+	var user models.User
+
+	database.GetDB().Find(&user, "user_id = ?", userOption.ID)
+
+	user.IsBlacklisted = true
+	database.GetDB().Save(&user)
+
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "User blacklisted successfully.",
+		},
+	})
+}
+
+func BlacklistRemove(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	userOption := event.ApplicationCommandData().Options[0].Options[0].UserValue(session)
+
+	var user models.User
+
+	database.GetDB().Find(&user, "user_id = ?", userOption.ID)
+
+	user.IsBlacklisted = true
+	database.GetDB().Save(&user)
+
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "User blacklisted successfully.",
+		},
+	})
 }
