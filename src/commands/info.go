@@ -42,6 +42,10 @@ func (c InfoCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
+func (c InfoCommand) DMsAllowed() bool {
+	return true
+}
+
 func (c InfoCommand) registerGuild() string {
 	return ""
 }

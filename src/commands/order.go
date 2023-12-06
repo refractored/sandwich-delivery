@@ -46,6 +46,10 @@ func (c OrderCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
+func (c OrderCommand) DMsAllowed() bool {
+	return false
+}
+
 func (c OrderCommand) registerGuild() string {
 	return ""
 }
@@ -55,15 +59,6 @@ func (c OrderCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-	if InteractionIsDM(event) {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				// todo https://github.com/refractored/sandwich-delivery/issues/5
-				Content: "This command can only be used in servers!",
-			},
-		})
-	}
 
 	options := event.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))

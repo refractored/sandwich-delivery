@@ -15,6 +15,9 @@ type Command interface {
 	// Returns the command data
 	getCommandData() *discordgo.ApplicationCommand
 
+	// Returns true if the command is allowed in DMs.
+	DMsAllowed() bool
+
 	// Returns the guild ID to register the command in, empty string if the command is global.
 	registerGuild() string
 

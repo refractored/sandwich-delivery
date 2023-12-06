@@ -143,6 +143,10 @@ func (c UserManageCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
+func (c UserManageCommand) DMsAllowed() bool {
+	return false
+}
+
 func (c UserManageCommand) registerGuild() string {
 	return ""
 }

@@ -32,6 +32,10 @@ func (c BotCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
+func (c BotCommand) DMsAllowed() bool {
+	return false
+}
+
 func (c BotCommand) registerGuild() string {
 	return config.GetConfig().GuildID
 }

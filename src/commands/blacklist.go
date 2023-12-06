@@ -48,6 +48,10 @@ func (c BlacklistCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
+func (c BlacklistCommand) DMsAllowed() bool {
+	return false
+}
+
 func (c BlacklistCommand) registerGuild() string {
 	return config.GetConfig().GuildID
 }

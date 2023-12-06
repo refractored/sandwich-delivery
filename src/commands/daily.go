@@ -19,6 +19,10 @@ func (c DailyCommand) getCommandData() *discordgo.ApplicationCommand {
 	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Collect your daily rewards!"}
 }
 
+func (c DailyCommand) DMsAllowed() bool {
+	return true
+}
+
 func (c DailyCommand) registerGuild() string {
 	return ""
 }
