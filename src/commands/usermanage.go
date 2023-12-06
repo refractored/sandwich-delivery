@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
+	"strconv"
 )
 
 type UserManageCommand struct{}
@@ -13,6 +14,7 @@ func (c UserManageCommand) getName() string {
 }
 
 func (c UserManageCommand) getCommandData() *discordgo.ApplicationCommand {
+	var creditMin float64 = 0
 	return &discordgo.ApplicationCommand{Name: c.getName(),
 		Description: "Manage data of an user.",
 		Options: []*discordgo.ApplicationCommandOption{
@@ -24,6 +26,48 @@ func (c UserManageCommand) getCommandData() *discordgo.ApplicationCommand {
 						Type:        discordgo.ApplicationCommandOptionUser,
 						Name:        "user",
 						Description: "The user to reset the daily timer.",
+						Required:    true,
+					},
+				},
+				Type: discordgo.ApplicationCommandOptionSubCommand,
+			},
+			{
+				Name:        "addcredits",
+				Description: "Remove credits from an user.",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionUser,
+						Name:        "user",
+						Description: "The user to add credits to",
+						Required:    true,
+					},
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "credits",
+						Description: "The amount to add.",
+						MinValue:    &creditMin,
+						MaxValue:    65535,
+						Required:    true,
+					},
+				},
+				Type: discordgo.ApplicationCommandOptionSubCommand,
+			},
+			{
+				Name:        "takecredits",
+				Description: "Remove Credits from an user.",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionUser,
+						Name:        "user",
+						Description: "The user to take credits of",
+						Required:    true,
+					},
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "credits",
+						Description: "The amount to add.",
+						MinValue:    &creditMin,
+						MaxValue:    65535,
 						Required:    true,
 					},
 				},
@@ -67,7 +111,7 @@ func (c UserManageCommand) getCommandData() *discordgo.ApplicationCommand {
 					{
 						Type:        discordgo.ApplicationCommandOptionInteger,
 						Name:        "permissionlevel",
-						Description: "The user to set the purge command data of.",
+						Description: "Set the user's permission level.",
 						Required:    false,
 						Choices: []*discordgo.ApplicationCommandOptionChoice{
 							{
@@ -118,7 +162,7 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 	}
 	switch options[0].Name {
 	case "resetdaily":
-		resp := database.GetDB().First(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
+		resp := database.GetDB().Find(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
 		if resp.RowsAffected == 0 {
 			user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
 			database.GetDB().Save(&user)
@@ -191,5 +235,68 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 			},
 		})
 		break
+	case "addcredits":
+		var userid string
+		if option, ok := optionMap["user"]; ok {
+			userid = option.UserValue(nil).ID
+		}
+		resp := database.GetDB().Find(&user, "user_id = ?", userid)
+		if resp.RowsAffected == 0 {
+			user.UserID = userid
+			database.GetDB().Save(&user)
+		}
+		if option, ok := optionMap["credits"]; ok {
+			user.Credits += uint32(option.IntValue())
+			if user.Credits < 0 {
+				session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "User cannot have negative credits!",
+					},
+				})
+				return
+			}
+			database.GetDB().Save(&user)
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Added " + strconv.Itoa(int(option.IntValue())) + " credits to " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username + "\n" +
+						"User now has " + strconv.Itoa(int(user.Credits)) + " credits.",
+				},
+			})
+		}
+		break
+	case "takecredits":
+		var userid string
+		if option, ok := optionMap["user"]; ok {
+			userid = option.UserValue(nil).ID
+		}
+		resp := database.GetDB().Find(&user, "user_id = ?", userid)
+		if resp.RowsAffected == 0 {
+			user.UserID = userid
+			database.GetDB().Save(&user)
+		}
+		if option, ok := optionMap["credits"]; ok {
+			if user.Credits < uint32(option.IntValue()) {
+				session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "User cannot have negative credits!",
+					},
+				})
+				return
+			}
+			user.Credits -= uint32(option.IntValue())
+			database.GetDB().Save(&user)
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Took " + strconv.Itoa(int(option.IntValue())) + " credits from " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username + "\n" +
+						"User now has " + strconv.Itoa(int(user.Credits)) + " credits.",
+				},
+			})
+		}
+		break
+
 	}
 }
