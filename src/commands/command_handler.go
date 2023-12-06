@@ -12,7 +12,7 @@ var commands = map[string]Command{
 	OrderCommand{}.getName():        OrderCommand{},
 	CancelOrder{}.getName():         CancelOrder{},
 	PingCommand{}.getName():         PingCommand{},
-	ShutdownCommand{}.getName():     ShutdownCommand{},
+	BotCommand{}.getName():          BotCommand{},
 	BlacklistCommand{}.getName():    BlacklistCommand{},
 	UnblacklistCommand{}.getName():  UnblacklistCommand{},
 	DailyCommand{}.getName():        DailyCommand{},
@@ -20,7 +20,6 @@ var commands = map[string]Command{
 	PrepareOrderCommand{}.getName(): PrepareOrderCommand{},
 	TipCommand{}.getName():          TipCommand{},
 	DeliverCommand{}.getName():      DeliverCommand{},
-	PurgeCommand{}.getName():        PurgeCommand{},
 	UserManageCommand{}.getName():   UserManageCommand{},
 	InfoCommand{}.getName():         InfoCommand{},
 }
