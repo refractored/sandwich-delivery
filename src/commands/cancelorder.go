@@ -40,7 +40,7 @@ func (c CancelOrder) execute(session *discordgo.Session, event *discordgo.Intera
 
 	var order models.Order
 
-	resp := database.GetDB().First(&order, "user_id = ?", GetUser(event).ID)
+	resp := database.GetDB().Find(&order, "user_id = ?", GetUser(event).ID)
 	if resp.RowsAffected == 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

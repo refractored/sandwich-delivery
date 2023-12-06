@@ -120,7 +120,7 @@ func (c InfoCommand) execute(session *discordgo.Session, event *discordgo.Intera
 			})
 			return
 		}
-		resp := database.GetDB().First(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
+		resp := database.GetDB().Find(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
 		if resp.RowsAffected == 0 {
 			user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
 

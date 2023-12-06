@@ -51,7 +51,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 	var employee models.User
 
 	if len(event.ApplicationCommandData().Options) == 1 {
-		resp := database.GetDB().Last(&order, "user_id = ?", GetUser(event).ID)
+		resp := database.GetDB().Find(&order, "user_id = ?", GetUser(event).ID)
 		if resp.RowsAffected == 0 {
 			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -63,7 +63,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 		}
 	} else {
 		id = uint64(event.ApplicationCommandData().Options[1].IntValue())
-		resp := database.GetDB().Last(&order, "id = ?", id)
+		resp := database.GetDB().Find(&order, "id = ?", id)
 		if resp.RowsAffected == 0 {
 			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -102,8 +102,8 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 		})
 		return
 	}
-	database.GetDB().First(&customer, "user_id = ?", GetUser(event).ID)
-	database.GetDB().First(&employee, "user_id = ?", order.Assignee)
+	database.GetDB().Find(&customer, "user_id = ?", GetUser(event).ID)
+	database.GetDB().Find(&employee, "user_id = ?", order.Assignee)
 	if customer.Credits < amount {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

@@ -28,7 +28,7 @@ func (c DeliverCommand) permissionLevel() models.UserPermissionLevel {
 
 func (c DeliverCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var order models.Order
-	resp := database.GetDB().First(&order, "assignee = ? AND status < ?", GetUser(event).ID, models.StatusDelivered)
+	resp := database.GetDB().Find(&order, "assignee = ? AND status < ?", GetUser(event).ID, models.StatusDelivered)
 
 	if resp.RowsAffected == 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
