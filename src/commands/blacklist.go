@@ -19,10 +19,30 @@ func (c BlacklistCommand) getCommandData() *discordgo.ApplicationCommand {
 		Description: "Blacklist a user from using the bot.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
-				Type:        discordgo.ApplicationCommandOptionUser,
-				Name:        "user",
-				Description: "The user to blacklist.",
-				Required:    true,
+				Name:        "add",
+				Description: "Add an user to the blacklisted users.",
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionUser,
+						Name:        "user",
+						Description: "The user to blacklist.",
+						Required:    true,
+					},
+				},
+			},
+			{
+				Name:        "remove",
+				Description: "remove an user from the blacklisted users.",
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionUser,
+						Name:        "user",
+						Description: "The user to remove.",
+						Required:    true,
+					},
+				},
 			},
 		},
 	}
@@ -37,19 +57,66 @@ func (c BlacklistCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c BlacklistCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-	userOption := event.ApplicationCommandData().Options[0].UserValue(session)
+	if InteractionIsDM(event) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "This command can only be used in servers!",
+			},
+		})
+	}
 
-	var user models.User
+	options := event.ApplicationCommandData().Options
+	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
+	for _, opt := range options[0].Options {
+		optionMap[opt.Name] = opt
+	}
+	switch options[0].Name {
 
-	database.GetDB().First(&user, "user_id = ?", userOption.ID)
+	case "add":
+		userOption := event.ApplicationCommandData().Options[0].Options[0].UserValue(session)
 
-	user.IsBlacklisted = true
-	database.GetDB().Save(&user)
+		var user models.User
 
-	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "User blacklisted successfully.",
-		},
-	})
+		database.GetDB().Find(&user, "user_id = ?", userOption.ID)
+
+		user.IsBlacklisted = true
+		database.GetDB().Save(&user)
+
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "User blacklisted successfully.",
+			},
+		})
+		break
+	case "remove":
+		userOption := event.ApplicationCommandData().Options[0].Options[0].UserValue(session)
+
+		var user models.User
+
+		resp := database.GetDB().Find(&user, "user_id = ?", userOption.ID)
+		if resp.RowsAffected == 0 || user.IsBlacklisted == false {
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					// todo https://github.com/refractored/sandwich-delivery/issues/5
+					Content: "User is not blacklisted.",
+				},
+			})
+			return
+		}
+
+		user.IsBlacklisted = false
+		database.GetDB().Save(&user)
+
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "User unblacklisted successfully.",
+			},
+		})
+		break
+	}
 }
