@@ -144,7 +144,7 @@ func (c UserManageCommand) getCommandData() *discordgo.ApplicationCommand {
 }
 
 func (c UserManageCommand) DMsAllowed() bool {
-	return false
+	return true
 }
 
 func (c UserManageCommand) registerGuild() string {
@@ -207,6 +207,16 @@ func UserManageResetDaily(session *discordgo.Session, event *discordgo.Interacti
 }
 
 func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	if GetPermissionLevel(GetUser(event).ID) < GetPermissionLevel(event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID) {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "You cannot modify permissions of users with higher permissions than you!",
+			},
+		})
+		return
+	}
+
 	var user models.User
 
 	options := event.ApplicationCommandData().Options
@@ -221,7 +231,7 @@ func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCr
 	if option, ok := optionMap["blacklisted"]; ok {
 		user.IsBlacklisted = option.BoolValue()
 	}
-	if option, ok := optionMap["blacklisted"]; ok {
+	if option, ok := optionMap["credits"]; ok {
 		user.Credits = uint32(option.IntValue())
 	}
 	if option, ok := optionMap["permissionlevel"]; ok {
