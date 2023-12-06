@@ -8,22 +8,21 @@ import (
 )
 
 var commands = map[string]Command{
-	CoinflipCommand{}.getName():           CoinflipCommand{},
-	OrderCommand{}.getName():              OrderCommand{},
-	CancelOrder{}.getName():               CancelOrder{},
-	PingCommand{}.getName():               PingCommand{},
-	ShutdownCommand{}.getName():           ShutdownCommand{},
-	BlacklistCommand{}.getName():          BlacklistCommand{},
-	UnblacklistCommand{}.getName():        UnblacklistCommand{},
-	SetPermissionLevelCommand{}.getName(): SetPermissionLevelCommand{},
-	DailyCommand{}.getName():              DailyCommand{},
-	AcceptOrderCommand{}.getName():        AcceptOrderCommand{},
-	PrepareOrderCommand{}.getName():       PrepareOrderCommand{},
-	TipCommand{}.getName():                TipCommand{},
-	DeliverCommand{}.getName():            DeliverCommand{},
-	PurgeCommand{}.getName():              PurgeCommand{},
-	UserManageCommand{}.getName():         UserManageCommand{},
-	InfoCommand{}.getName():               InfoCommand{},
+	CoinflipCommand{}.getName():     CoinflipCommand{},
+	OrderCommand{}.getName():        OrderCommand{},
+	CancelOrder{}.getName():         CancelOrder{},
+	PingCommand{}.getName():         PingCommand{},
+	ShutdownCommand{}.getName():     ShutdownCommand{},
+	BlacklistCommand{}.getName():    BlacklistCommand{},
+	UnblacklistCommand{}.getName():  UnblacklistCommand{},
+	DailyCommand{}.getName():        DailyCommand{},
+	AcceptOrderCommand{}.getName():  AcceptOrderCommand{},
+	PrepareOrderCommand{}.getName(): PrepareOrderCommand{},
+	TipCommand{}.getName():          TipCommand{},
+	DeliverCommand{}.getName():      DeliverCommand{},
+	PurgeCommand{}.getName():        PurgeCommand{},
+	UserManageCommand{}.getName():   UserManageCommand{},
+	InfoCommand{}.getName():         InfoCommand{},
 }
 
 func RegisterCommands(session *discordgo.Session) {

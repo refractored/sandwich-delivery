@@ -109,6 +109,7 @@ func (c UserManageCommand) permissionLevel() models.UserPermissionLevel {
 
 func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var user models.User
+	var executor models.User
 
 	options := event.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
@@ -132,7 +133,17 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 		})
 		break
 	case "modify":
-		resp := database.GetDB().First(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
+		database.GetDB().Find(&executor, "user_id = ?", GetUser(event).ID)
+		resp := database.GetDB().Find(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
+		if executor.PermissionLevel < models.PermissionLevelAdmin {
+			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "You're lacking the required permissions to modify this user!",
+				},
+			})
+			return
+		}
 		if resp.RowsAffected == 0 {
 			user.UserID = event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID
 			database.GetDB().Save(&user)
@@ -145,6 +156,15 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 		}
 		if option, ok := optionMap["permissionlevel"]; ok {
 			user.PermissionLevel = models.UserPermissionLevel(option.IntValue())
+			if executor.PermissionLevel < models.UserPermissionLevel(option.IntValue()) {
+				session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "You cannot assign permissions higher than your own!",
+					},
+				})
+				return
+			}
 		}
 		if len(optionMap) == 0 {
 			session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
