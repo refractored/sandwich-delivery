@@ -48,14 +48,20 @@ func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.Inter
 	}
 
 	var user models.User
+	var elapsed time.Duration
 
 	database.GetDB().First(&user, "user_id = ?", GetUser(event).ID)
-
-	elapsed := time.Since(user.DailyClaimedAt)
+	if user.DailyClaimedAt != nil {
+		claimedAt := *user.DailyClaimedAt
+		elapsed = time.Since(claimedAt)
+	} else {
+		elapsed = 24 * time.Hour
+	}
 
 	if elapsed.Hours() >= 24 {
 		user.Credits = user.Credits + *config.GetConfig().DailyTokens
-		user.DailyClaimedAt = time.Now()
+		TimeNow := time.Now()
+		user.DailyClaimedAt = &TimeNow
 		database.GetDB().Save(&user)
 
 		var tokenMessage string
