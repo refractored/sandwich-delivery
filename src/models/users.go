@@ -10,8 +10,8 @@ type User struct {
 	OrdersAccepted  uint32
 	PermissionLevel UserPermissionLevel
 	IsBlacklisted   bool
-	DailyClaimedAt  time.Time `gorm:"type:datetime"`
-	CreatedAt       time.Time `gorm:"<-:create type:datetime"`
+	DailyClaimedAt  *time.Time `gorm:"type:datetime"`
+	CreatedAt       time.Time  `gorm:"<-:create type:datetime"`
 }
 
 type UserPermissionLevel uint8
