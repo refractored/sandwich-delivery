@@ -13,11 +13,11 @@ type Order struct {
 	SourceChannel    string
 	Assignee         string
 	Tipped           bool
-	Status           DeliveryStatus
-	CreatedAt        time.Time  `gorm:"<-:create type:datetime"`
-	AcceptedAt       *time.Time `gorm:"type:datetime"`
-	InTransitAt      *time.Time `gorm:"type:datetime"`
-	DeliveredAt      *time.Time `gorm:"type:datetime"`
+	Status           DeliveryStatus `gorm:"default:0"`
+	CreatedAt        time.Time      `gorm:"<-:create type:datetime"`
+	AcceptedAt       *time.Time     `gorm:"type:datetime"`
+	InTransitAt      *time.Time     `gorm:"type:datetime"`
+	DeliveredAt      *time.Time     `gorm:"type:datetime"`
 	DeletedAt        *gorm.DeletedAt
 }
 

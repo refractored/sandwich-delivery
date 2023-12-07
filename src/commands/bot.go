@@ -15,6 +15,8 @@ func (c BotCommand) getName() string {
 }
 
 func (c BotCommand) getCommandData() *discordgo.ApplicationCommand {
+	DMPermission := new(bool)
+	*DMPermission = false
 	return &discordgo.ApplicationCommand{Name: c.getName(),
 		Description: "Manage the bot.",
 		Options: []*discordgo.ApplicationCommandOption{
@@ -29,11 +31,8 @@ func (c BotCommand) getCommandData() *discordgo.ApplicationCommand {
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 			},
 		},
+		DMPermission: DMPermission,
 	}
-}
-
-func (c BotCommand) DMsAllowed() bool {
-	return false
 }
 
 func (c BotCommand) registerGuild() string {
@@ -45,13 +44,7 @@ func (c BotCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c BotCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-
-	options := event.ApplicationCommandData().Options
-	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
-	for _, opt := range options[0].Options {
-		optionMap[opt.Name] = opt
-	}
-	switch options[0].Name {
+	switch event.ApplicationCommandData().Options[0].Name {
 	case "shutdown":
 		BotShutdown(session, event)
 		break

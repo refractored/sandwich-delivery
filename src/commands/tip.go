@@ -35,10 +35,6 @@ func (c TipCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
-func (c TipCommand) DMsAllowed() bool {
-	return false
-}
-
 func (c TipCommand) registerGuild() string {
 	return ""
 }
@@ -88,7 +84,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 		}
 
 	}
-	if order.Status != models.StatusDelivered {
+	if order.Status > models.StatusDelivered {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{

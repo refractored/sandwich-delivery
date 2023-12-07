@@ -15,10 +15,6 @@ func (c PingCommand) getCommandData() *discordgo.ApplicationCommand {
 	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Pong!"}
 }
 
-func (c PingCommand) DMsAllowed() bool {
-	return true
-}
-
 func (c PingCommand) registerGuild() string {
 	return ""
 }

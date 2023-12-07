@@ -46,10 +46,6 @@ func (c OrderCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
-func (c OrderCommand) DMsAllowed() bool {
-	return false
-}
-
 func (c OrderCommand) registerGuild() string {
 	return ""
 }
@@ -59,14 +55,7 @@ func (c OrderCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-
-	options := event.ApplicationCommandData().Options
-	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
-
-	for _, opt := range options[0].Options {
-		optionMap[opt.Name] = opt
-	}
-	switch options[0].Name {
+	switch event.ApplicationCommandData().Options[0].Name {
 	case "create":
 		OrderCreate(session, event)
 		break

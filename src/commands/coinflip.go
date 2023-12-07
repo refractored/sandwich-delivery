@@ -16,10 +16,6 @@ func (c CoinflipCommand) getCommandData() *discordgo.ApplicationCommand {
 	return &discordgo.ApplicationCommand{Name: c.getName(), Description: "Flip a virtual coin."}
 }
 
-func (c CoinflipCommand) DMsAllowed() bool {
-	return true
-}
-
 func (c CoinflipCommand) registerGuild() string {
 	return ""
 }

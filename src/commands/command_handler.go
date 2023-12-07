@@ -95,16 +95,6 @@ func HandleCommand(session *discordgo.Session, event *discordgo.InteractionCreat
 		return
 	}
 
-	if command.DMsAllowed() == false && InteractionIsDM(event) == true {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				// todo https://github.com/refractored/sandwich-delivery/issues/5
-				Content: "This command can only be used in servers!",
-			},
-		})
-	}
-
 	if command.permissionLevel() > GetPermissionLevel(GetUser(event).ID) {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

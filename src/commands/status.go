@@ -50,10 +50,6 @@ func (c StatusCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
-func (c StatusCommand) DMsAllowed() bool {
-	return false
-}
-
 func (c StatusCommand) registerGuild() string {
 	return ""
 }
@@ -63,14 +59,7 @@ func (c StatusCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c StatusCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-
-	options := event.ApplicationCommandData().Options
-	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
-	for _, opt := range options[0].Options {
-		optionMap[opt.Name] = opt
-	}
-	switch options[0].Name {
-
+	switch event.ApplicationCommandData().Options[0].Name {
 	case "accept":
 		OrderStatusAccept(session, event)
 		break
@@ -98,9 +87,7 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 		})
 		return
 	}
-
 	resp = database.GetDB().Find(&order, "id = ?", orderID)
-
 	if resp.RowsAffected == 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -184,13 +171,11 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 		database.GetDB().Save(&order)
 		return
 	}
-
 	order.Assignee = GetUser(event).ID
 	var timeNow = time.Now()
 	order.AcceptedAt = &timeNow
 	order.Status = models.StatusAccepted
 	resp = database.GetDB().Save(&order)
-
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -198,7 +183,6 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 		},
 	})
 }
-
 func OrderStatusInTransit(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var order models.Order
 

@@ -48,10 +48,6 @@ func (c BlacklistCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
-func (c BlacklistCommand) DMsAllowed() bool {
-	return false
-}
-
 func (c BlacklistCommand) registerGuild() string {
 	return config.GetConfig().GuildID
 }
@@ -61,23 +57,7 @@ func (c BlacklistCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c BlacklistCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-	if InteractionIsDM(event) {
-		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				// todo https://github.com/refractored/sandwich-delivery/issues/5
-				Content: "This command can only be used in servers!",
-			},
-		})
-	}
-
-	options := event.ApplicationCommandData().Options
-	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
-	for _, opt := range options[0].Options {
-		optionMap[opt.Name] = opt
-	}
-	switch options[0].Name {
-
+	switch event.ApplicationCommandData().Options[0].Name {
 	case "add":
 		BlacklistAdd(session, event)
 		break
@@ -92,8 +72,10 @@ func BlacklistAdd(session *discordgo.Session, event *discordgo.InteractionCreate
 
 	var user models.User
 
-	database.GetDB().Find(&user, "user_id = ?", userOption.ID)
-
+	resp := database.GetDB().Find(&user, "user_id = ?", userOption.ID)
+	if resp.RowsAffected == 0 {
+		user.UserID = userOption.ID
+	}
 	user.IsBlacklisted = true
 	database.GetDB().Save(&user)
 
@@ -110,11 +92,12 @@ func BlacklistRemove(session *discordgo.Session, event *discordgo.InteractionCre
 
 	var user models.User
 
-	database.GetDB().Find(&user, "user_id = ?", userOption.ID)
-
+	resp := database.GetDB().Find(&user, "user_id = ?", userOption.ID)
+	if resp.RowsAffected == 0 {
+		user.UserID = userOption.ID
+	}
 	user.IsBlacklisted = true
 	database.GetDB().Save(&user)
-
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{

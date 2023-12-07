@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/database"
 	"sandwich-delivery/src/models"
 	"strconv"
@@ -143,12 +144,8 @@ func (c UserManageCommand) getCommandData() *discordgo.ApplicationCommand {
 	}
 }
 
-func (c UserManageCommand) DMsAllowed() bool {
-	return true
-}
-
 func (c UserManageCommand) registerGuild() string {
-	return ""
+	return config.GetConfig().GuildID
 }
 
 func (c UserManageCommand) permissionLevel() models.UserPermissionLevel {
@@ -156,14 +153,7 @@ func (c UserManageCommand) permissionLevel() models.UserPermissionLevel {
 }
 
 func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.InteractionCreate) {
-
-	options := event.ApplicationCommandData().Options
-	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
-	for _, opt := range options[0].Options {
-		optionMap[opt.Name] = opt
-	}
-
-	switch options[0].Name {
+	switch event.ApplicationCommandData().Options[0].Name {
 	case "resetdaily":
 		UserManageResetDaily(session, event)
 		break
@@ -184,7 +174,6 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 	case "takecredits":
 		UserManageTakeCredits(session, event)
 		break
-
 	}
 }
 
@@ -221,6 +210,9 @@ func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCr
 
 	options := event.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
+	for _, opt := range options[0].Options {
+		optionMap[opt.Name] = opt
+	}
 
 	resp := database.GetDB().Find(&user, "user_id = ?", event.ApplicationCommandData().Options[0].Options[0].UserValue(session).ID)
 
@@ -262,12 +254,16 @@ func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCr
 			Content: "Modified Data of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
 		},
 	})
+	return
 }
 func UserManageAddCredits(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var user models.User
 
 	options := event.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
+	for _, opt := range options[0].Options {
+		optionMap[opt.Name] = opt
+	}
 
 	var userid string
 	if option, ok := optionMap["user"]; ok {
@@ -304,6 +300,9 @@ func UserManageTakeCredits(session *discordgo.Session, event *discordgo.Interact
 
 	options := event.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options[0].Options))
+	for _, opt := range options[0].Options {
+		optionMap[opt.Name] = opt
+	}
 
 	var userid string
 	if option, ok := optionMap["user"]; ok {
