@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - dev
-    tags:
   release:
   pull_request:
 
@@ -25,9 +24,10 @@ jobs:
             latest=${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease == false }}
           tags: |
             type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease == false }}
-            type=ref,enable=true,event=tag
+            type=raw,value=nightly,enable=${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease == true }}
             type=ref,enable=true,event=branch
             type=ref,enable=true,event=pr
+            type=raw,value=${{ github.event.release.name }},enable=${{ github.event_name = 'release' && github.event.action = 'published' }}
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
