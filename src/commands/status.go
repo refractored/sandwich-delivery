@@ -76,6 +76,7 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 
 	orderID := models.UserPermissionLevel(event.ApplicationCommandData().Options[0].Options[0].IntValue())
 
+	// Check if artist already has an order
 	resp := database.GetDB().Find(&order, "assignee = ? AND status < ?", GetUser(event).ID, models.StatusDelivered)
 
 	if resp.RowsAffected != 0 {
@@ -97,11 +98,22 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 		})
 		return
 	}
+
+	if order.Status > models.StatusDelivered {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "This order was cancelled!",
+			},
+		})
+		return
+	}
+
 	if order.Status != models.StatusWaiting {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "This order can no longer be accepted!",
+				Content: "This order can no longer be accepted! It's either already accepted or delivered.",
 			},
 		})
 		return

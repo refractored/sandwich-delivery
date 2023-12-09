@@ -66,6 +66,40 @@ func (c OrderCommand) execute(session *discordgo.Session, event *discordgo.Inter
 }
 
 func OrderCreate(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	perms, _ := session.UserChannelPermissions(session.State.User.ID, event.ChannelID)
+	if perms&discordgo.PermissionViewChannel == 0 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "Please contact the server owner to allow the bot to view messages in this channel!",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+	if perms&discordgo.PermissionSendMessages == 0 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "Please contact the server owner to allow the bot to send messages in this channel!",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+	if perms&discordgo.PermissionCreateInstantInvite == 0 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				// todo https://github.com/refractored/sandwich-delivery/issues/5
+				Content: "Please contact the server owner to allow the bot to create invites in this channel",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
 	orderOption := event.ApplicationCommandData().Options[0].Options[0].StringValue()
 	var order models.Order
 	var user models.User
@@ -197,7 +231,7 @@ func OrderCreate(session *discordgo.Session, event *discordgo.InteractionCreate)
 func OrderCancel(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var order models.Order
 
-	resp := database.GetDB().Find(&order, "user_id = ?", GetUser(event).ID)
+	resp := database.GetDB().Find(&order, "user_id = ? AND status < ?", GetUser(event).ID, models.StatusDelivered)
 	if resp.RowsAffected == 0 {
 		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -223,6 +257,34 @@ func OrderCancel(session *discordgo.Session, event *discordgo.InteractionCreate)
 		return
 	}
 	order.Status = models.StatusCancelled
+	if order.Assignee != "" {
+		dmMessage, err := session.UserChannelCreate(order.Assignee)
+		if err != nil {
+			session.ChannelMessageSendComplex(dmMessage.ID, &discordgo.MessageSend{
+				Content: "<@" + order.Assignee + ">",
+				Embed: &discordgo.MessageEmbed{
+					Title:       "Order Error!",
+					Description: "The order you were working on was canceled by the customer.",
+					Color:       0xff2c2c,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Delete Command ran by " + DisplayName(event),
+						IconURL: GetUser(event).AvatarURL("256"),
+					},
+					Author: &discordgo.MessageEmbedAuthor{
+						Name:    "Sandwich Delivery",
+						IconURL: session.State.User.AvatarURL("256"),
+					},
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:   "Order:",
+							Value:  order.OrderDescription,
+							Inline: false,
+						},
+					},
+				},
+			})
+		}
+	}
 	database.GetDB().Save(&order)
 
 	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
