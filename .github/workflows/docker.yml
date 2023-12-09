@@ -6,6 +6,8 @@ on:
       - master
       - dev
   release:
+    types:
+      - published
   pull_request:
 
 jobs:
@@ -21,12 +23,14 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}/sandwich-delivery
           flavor: |
-            latest=${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease == false }}
+            latest=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
           tags: |
-            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease == false }}
-            type=ref,enable=true,event=tag
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
+            type=raw,value=nightly,enable=${{ github.event_name == 'release' && github.event.release.prerelease == true }}
             type=ref,enable=true,event=branch
             type=ref,enable=true,event=pr
+            type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=${{ github.event.release.name }},enable=${{ github.event_name == 'release' }}
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
