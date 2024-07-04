@@ -43,6 +43,7 @@ func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.Inter
 						},
 					},
 				},
+				Flags: discordgo.MessageFlagsEphemeral,
 			},
 		})
 	}
@@ -118,6 +119,7 @@ func (c DailyCommand) execute(session *discordgo.Session, event *discordgo.Inter
 						},
 					},
 				},
+				Flags: discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return

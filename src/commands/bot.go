@@ -80,6 +80,7 @@ func BotPurgeCMDS(session *discordgo.Session, event *discordgo.InteractionCreate
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Give me a minute...",
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 

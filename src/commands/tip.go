@@ -57,6 +57,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "You've never ordered anything before!",
+					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			})
 			return
@@ -69,6 +70,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "This order does not exist!",
+					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			})
 			return
@@ -78,6 +80,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "You can only tip your own orders!",
+					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			})
 			return
@@ -89,6 +92,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You can only tip delivered orders!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -98,6 +102,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You've already tipped this order! You can only tip once!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -109,6 +114,7 @@ func (c TipCommand) execute(session *discordgo.Session, event *discordgo.Interac
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You don't have enough credits to tip!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return

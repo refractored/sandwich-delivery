@@ -165,6 +165,7 @@ func (c UserManageCommand) execute(session *discordgo.Session, event *discordgo.
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "purge",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		break
@@ -191,6 +192,7 @@ func UserManageResetDaily(session *discordgo.Session, event *discordgo.Interacti
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Reset daily of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 }
@@ -201,6 +203,7 @@ func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCr
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You cannot modify permissions of users with higher permissions than you!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -233,6 +236,7 @@ func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCr
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "You cannot assign permissions higher than your own!",
+					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			})
 			return
@@ -243,6 +247,7 @@ func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCr
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "No options provided.",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -252,6 +257,7 @@ func UserManageModify(session *discordgo.Session, event *discordgo.InteractionCr
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Modified Data of " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username,
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 	return
@@ -281,6 +287,7 @@ func UserManageAddCredits(session *discordgo.Session, event *discordgo.Interacti
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "User cannot have negative credits!",
+					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			})
 			return
@@ -291,6 +298,7 @@ func UserManageAddCredits(session *discordgo.Session, event *discordgo.Interacti
 			Data: &discordgo.InteractionResponseData{
 				Content: "Added " + strconv.Itoa(int(option.IntValue())) + " credits to " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username + "\n" +
 					"User now has " + strconv.Itoa(int(user.Credits)) + " credits.",
+				Flags: discordgo.MessageFlagsEphemeral,
 			},
 		})
 	}
@@ -319,6 +327,7 @@ func UserManageTakeCredits(session *discordgo.Session, event *discordgo.Interact
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "User cannot have negative credits!",
+					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			})
 			return
@@ -330,6 +339,7 @@ func UserManageTakeCredits(session *discordgo.Session, event *discordgo.Interact
 			Data: &discordgo.InteractionResponseData{
 				Content: "Took " + strconv.Itoa(int(option.IntValue())) + " credits from " + event.ApplicationCommandData().Options[0].Options[0].UserValue(session).Username + "\n" +
 					"User now has " + strconv.Itoa(int(user.Credits)) + " credits.",
+				Flags: discordgo.MessageFlagsEphemeral,
 			},
 		})
 	}

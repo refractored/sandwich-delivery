@@ -83,6 +83,7 @@ func BlacklistAdd(session *discordgo.Session, event *discordgo.InteractionCreate
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "User blacklisted successfully.",
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 }
@@ -102,6 +103,7 @@ func BlacklistRemove(session *discordgo.Session, event *discordgo.InteractionCre
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "User blacklisted successfully.",
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 }
