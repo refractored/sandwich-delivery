@@ -82,7 +82,9 @@ func InfoBot(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	if result.Error != nil {
 		log.Println("Error counting orders:", result.Error)
 	}
-	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
+	_ = session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{
@@ -94,6 +96,9 @@ func InfoBot(session *discordgo.Session, event *discordgo.InteractionCreate) {
 						"Completed Orders: " + strconv.Itoa(int(completedOrderCount)) + "\n" +
 						"Canceled Orders: " + strconv.Itoa(int(canceledOrderCount)) + "\n" +
 						"Sandwich Accounts: " + strconv.Itoa(int(userCount)) + "\n" +
+						"CPU Count: " + strconv.Itoa(runtime.NumCPU()) + "\n" +
+						"Memory Usage: " + fmt.Sprintf("%d KB", mem.Alloc/1024) + "\n" +
+						"Memory Max Usage: " + fmt.Sprintf("%d KB", mem.TotalAlloc/1024) + "\n" +
 						fmt.Sprintf("Library: DiscordGo (%s)", discordgo.VERSION) + "\n" +
 						"Runtime: " + runtime.Version() + " " + runtime.GOARCH + "\n",
 
