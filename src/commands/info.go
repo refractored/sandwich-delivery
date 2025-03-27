@@ -111,6 +111,7 @@ func InfoBot(session *discordgo.Session, event *discordgo.InteractionCreate) {
 					},
 				},
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		},
 	})
 }
@@ -120,6 +121,7 @@ func InfoUser(session *discordgo.Session, event *discordgo.InteractionCreate) {
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You can lookup the bots information with /info bot",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -167,6 +169,7 @@ func InfoUser(session *discordgo.Session, event *discordgo.InteractionCreate) {
 					},
 				},
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		},
 	})
 }

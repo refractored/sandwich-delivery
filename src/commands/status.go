@@ -84,6 +84,7 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You can only accept one order at a time!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -94,6 +95,7 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "Order not found.",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -104,6 +106,7 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "This order was cancelled!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -114,6 +117,7 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "This order can no longer be accepted! It's either already accepted or delivered.",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -152,6 +156,7 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "Order Location Invalid! Order Deleted.",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		dmMessage, _ := session.UserChannelCreate(order.UserID)
@@ -192,6 +197,7 @@ func OrderStatusAccept(session *discordgo.Session, event *discordgo.InteractionC
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Order accepted!",
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 }
@@ -206,6 +212,7 @@ func OrderStatusInTransit(session *discordgo.Session, event *discordgo.Interacti
 			Data: &discordgo.InteractionResponseData{
 				Content: "You don't have an order mark as in transit!" + "\n" +
 					"Use /status accept to accept an order first!",
+				Flags: discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -216,6 +223,7 @@ func OrderStatusInTransit(session *discordgo.Session, event *discordgo.Interacti
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You can only prepare orders that you accepted!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -254,6 +262,7 @@ func OrderStatusInTransit(session *discordgo.Session, event *discordgo.Interacti
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "Order Location Invalid! Order Deleted.",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		dmMessage, _ := session.UserChannelCreate(order.UserID)
@@ -291,6 +300,7 @@ func OrderStatusInTransit(session *discordgo.Session, event *discordgo.Interacti
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "Could not create invite! Order Deleted.",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		dmMessage, _ := session.UserChannelCreate(order.UserID)
@@ -357,6 +367,7 @@ func OrderStatusInTransit(session *discordgo.Session, event *discordgo.Interacti
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "Please make sure DMs are enabled!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -370,6 +381,7 @@ func OrderStatusInTransit(session *discordgo.Session, event *discordgo.Interacti
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Check your DMs!",
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 }
@@ -383,6 +395,7 @@ func OrderStatusDelivered(session *discordgo.Session, event *discordgo.Interacti
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You don't have an order to mark as delivered!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -393,6 +406,7 @@ func OrderStatusDelivered(session *discordgo.Session, event *discordgo.Interacti
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "You can only mark orders as delivered if they are in transit!",
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		return
@@ -435,6 +449,7 @@ func OrderStatusDelivered(session *discordgo.Session, event *discordgo.Interacti
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Marked order as finished!",
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 }
