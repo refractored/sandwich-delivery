@@ -32,3 +32,7 @@ const (
 	StatusModerated DeliveryStatus = 5 // Cancelled by staff
 	StatusError     DeliveryStatus = 6 // Cancelled due to error (e.g. invalid location)
 )
+
+func (s DeliveryStatus) String() string {
+	return [...]string{"Waiting", "Accepted", "In Transit", "Delivered", "Cancelled", "Cancelled (Staff)", "Cancelled (Error)"}[s]
+}

@@ -34,6 +34,19 @@ func (c InfoCommand) getCommandData() *discordgo.ApplicationCommand {
 				Type: discordgo.ApplicationCommandOptionSubCommand,
 			},
 			{
+				Name:        "user",
+				Description: "Lookup an order.",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "order",
+						Description: "The ID of the order to lookup.",
+						Required:    true,
+					},
+				},
+				Type: discordgo.ApplicationCommandOptionSubCommand,
+			},
+			{
 				Name:        "bot",
 				Description: "Lookup Bot Data",
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -58,8 +71,12 @@ func (c InfoCommand) execute(session *discordgo.Session, event *discordgo.Intera
 	case "user":
 		InfoUser(session, event)
 		break
+	case "order":
+		InfoOrder(session, event)
+		break
 	}
 }
+
 func InfoBot(session *discordgo.Session, event *discordgo.InteractionCreate) {
 	var pendingOrderCount int64
 	var completedOrderCount int64
@@ -164,6 +181,82 @@ func InfoUser(session *discordgo.Session, event *discordgo.InteractionCreate) {
 					},
 					Thumbnail: &discordgo.MessageEmbedThumbnail{
 						URL: userarg.AvatarURL("256"),
+					},
+				},
+			},
+		},
+	})
+}
+
+func InfoOrder(session *discordgo.Session, event *discordgo.InteractionCreate) {
+	var order models.Order
+
+	resp := database.GetDB().Find(&order, "id = ?", event.ApplicationCommandData().Options[0].Options[0].IntValue())
+
+	if resp.RowsAffected == 0 {
+		session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Order not found.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
+	var user, _ = session.User(order.UserID)
+	var server, _ = session.Guild(order.SourceServer)
+	var channel, _ = session.Channel(order.SourceChannel)
+	var assignee, _ = session.User(order.Assignee)
+
+	var description string = "Order ID: " + strconv.Itoa(int(order.ID)) + "\n" +
+		"Description: " + order.OrderDescription + "\n" +
+		"Status: " + order.Status.String() + "\n" +
+		"Created At: " + order.CreatedAt.String() + "\n"
+
+	if user != nil {
+		description += "User: " + user.Mention() + "\n"
+	}
+
+	if server != nil {
+		description += "Server: " + server.Name + "\n"
+	}
+
+	if channel != nil {
+		description += "Channel: " + channel.Name + "\n"
+	}
+
+	if assignee != nil {
+		description += "Assignee: " + assignee.Mention() + "\n"
+	}
+
+	if order.AcceptedAt != nil {
+		description += "Accepted At: " + order.AcceptedAt.String() + "\n"
+	}
+
+	if order.InTransitAt != nil {
+		description += "In Transit At: " + order.InTransitAt.String() + "\n"
+	}
+
+	if order.DeliveredAt != nil {
+		description += "Delivered At: " + order.DeliveredAt.String() + "\n"
+	}
+
+	session.InteractionRespond(event.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "User Information",
+					Description: description,
+					Color:       0x00ff00,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Executed by " + DisplayName(event),
+						IconURL: GetUser(event).AvatarURL("256"),
+					},
+					Author: &discordgo.MessageEmbedAuthor{
+						Name:    "Sandwich Delivery",
+						IconURL: session.State.User.AvatarURL("256"),
 					},
 				},
 			},
