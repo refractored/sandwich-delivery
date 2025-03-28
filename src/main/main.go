@@ -10,6 +10,7 @@ import (
 	"sandwich-delivery/src/commands"
 	"sandwich-delivery/src/config"
 	"sandwich-delivery/src/database"
+	"sandwich-delivery/src/events"
 	"sandwich-delivery/src/models"
 	"strconv"
 	"syscall"
@@ -24,13 +25,9 @@ func main() {
 	cfg, err := config.LoadConfig(configPath)
 
 	log.Println("Verifying Config...")
-	success, err := config.VerifyConfig(cfg)
-
+	err = config.VerifyConfig(cfg)
 	if err != nil {
 		log.Fatal(err)
-	}
-	if !success {
-		log.Fatal("Config verification failed!")
 	}
 
 	log.Println("Initializing Database...")
@@ -41,6 +38,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	sess.AddHandler(func(session *discordgo.Session, event *discordgo.Ready) {
+		events.HandleReady(session, event)
+	})
 
 	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 
@@ -56,8 +57,9 @@ func main() {
 		commands.HandleCommand(session, event)
 	})
 
-	sess.UpdateGameStatus(0, "Bot started!")
-	_, err = sess.ChannelMessageSend(config.GetConfig().StartupChannelID, fmt.Sprintf("Bot started! (%[1]s)", time.Since(startTime)))
+	_ = sess.UpdateGameStatus(0, "Bot started!")
+
+	_, err = sess.ChannelMessageSend(config.GetConfig().StartupChannelID, fmt.Sprintf("Bot started! (%[1]s)", time.Since(startTime).Round(10*time.Millisecond)))
 	if err != nil && config.GetConfig().StartupChannelID != "" {
 		log.Println("Error sending startup message:", err)
 	}
@@ -95,9 +97,11 @@ func updateStatusPeriodically(s *discordgo.Session, db *gorm.DB) {
 		}
 		orderCountString := strconv.Itoa(int(orderCount))
 
-		s.UpdateGameStatus(0, "Orders: "+orderCountString)
+		err := s.UpdateGameStatus(0, "Orders: "+orderCountString)
+		if err == nil {
+			log.Println("Bot status updated. Orders:", orderCount)
+		}
 
-		log.Println("Bot status updated. Orders:", orderCount)
 		time.Sleep(updateInterval)
 	}
 

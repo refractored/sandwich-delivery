@@ -29,6 +29,12 @@ type Config struct {
 
 	TokensPerOrder *uint32 `json:"tokensPerOrder"`
 	DailyTokens    *uint32 `json:"dailyTokens"`
+
+	TopGG struct {
+		Enabled bool   `json:"enabled"`
+		Token   string `json:"token"`
+		Port    int    `json:"port"`
+	} `json:"topgg"`
 }
 
 // Error represents a configuration error.
@@ -62,69 +68,69 @@ func LoadConfig(filePath string) (*Config, error) {
 	return config, nil
 }
 
-// VerifyConfig returns true if valid, otherwise false with an error.
-func VerifyConfig(config *Config) (bool, error) {
+// VerifyConfig returns an error if the provided configuration is invalid. This function checks for required fields and validates their values.
+func VerifyConfig(config *Config) error {
 	if config.Token == "" {
-		return false, &Error{"token is not set"}
+		return &Error{"token is not set"}
 	}
 
 	if len(config.Owners) == 0 {
-		return false, &Error{"There are no entries in owners"}
+		return &Error{"There are no entries in owners"}
 	}
 
 	if config.GuildID == "" {
-		return false, &Error{"guildID is not set"}
+		return &Error{"guildID is not set"}
 	}
 
 	if config.KitchenChannelID == "" {
-		return false, &Error{"kitchenChannelID is not set"}
+		return &Error{"kitchenChannelID is not set"}
 	}
 
 	if config.Database.Host == "" && config.Database.URL == "" {
-		return false, &Error{"Database host is not set"}
+		return &Error{"Database host is not set"}
 	}
 
 	if config.Database.Port == 0 && config.Database.URL == "" {
-		return false, &Error{"Database port is not set"}
+		return &Error{"Database port is not set"}
 	}
 
 	if config.Database.User == "" && config.Database.URL == "" {
-		return false, &Error{"Database user is not set"}
+		return &Error{"Database user is not set"}
 	}
 
 	if config.Database.DBName == "" && config.Database.URL == "" {
-		return false, &Error{"Database name is not set"}
+		return &Error{"Database name is not set"}
 	}
 
 	for key, value := range config.Database.ExtraOptions {
 		if key == "" || value == "" {
-			return false, &Error{"Database extra option is not set"}
+			return &Error{"Database extra option is not set"}
 		}
 
 		if strings.ContainsAny(key, " :+?/()=@&") {
-			return false, &Error{"Database extra option key contains invalid characters: " + key}
+			return &Error{"Database extra option key contains invalid characters: " + key}
 		}
 
 		if strings.ContainsAny(value, " :+?/()=@&") {
-			return false, &Error{"Database extra option key contains invalid characters: " + value}
+			return &Error{"Database extra option key contains invalid characters: " + value}
 		}
 	}
 
 	if config.Database.URL != "" {
 		if config.Database.Host != "" || config.Database.Port != 0 || config.Database.User != "" || config.Database.Password != "" || config.Database.DBName != "" || len(config.Database.ExtraOptions) != 0 {
-			return false, &Error{"Database URL and other database options are set"}
+			return &Error{"Database URL and other database options are set"}
 		}
 	}
 
 	if *config.TokensPerOrder < 0 {
-		return false, &Error{"Tokens per order is less than 0"}
+		return &Error{"Tokens per order is less than 0"}
 	}
 
 	if *config.DailyTokens < 0 {
-		return false, &Error{"Daily tokens is less than 0"}
+		return &Error{"Daily tokens is less than 0"}
 	}
 
-	return true, nil
+	return nil
 }
 
 func setDefaults(config *Config) {
